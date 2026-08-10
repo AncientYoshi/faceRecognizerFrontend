@@ -1,0 +1,21 @@
+<div class="sessions-page">
+  <header class="page-heading"><div><h1>Attendance Sessions</h1><p>View and verify your scheduled attendance sessions.</p></div><label><sam-icon name="calendar"/><input type="date" [(ngModel)]="selectedDate" (change)="load()"></label></header>
+  @if(loading()){<div class="loading"><span></span><p>Loading your sessions…</p></div>}
+  @else if(error()) {<div class="no-sessions error"><sam-icon name="info" size="48"/><h2>Sessions unavailable</h2><p>{{error()}}</p><button (click)="load()">Try again</button></div>}
+  @else {
+    <section class="session-grid">
+      @for(session of sessions(); track session.id; let i=$index){
+        <article class="course-card c{{i%4}}">
+          <div class="course-art"><span class="art-icon"><sam-icon [name]="i%2===0 ? 'settings' : 'building'" size="58"/></span><i></i><i></i><i></i></div>
+          <div class="course-name">{{session.courseName}} <span>{{session.courseCode}}</span></div>
+          <div class="teacher">Teacher {{session.teacherName}}</div>
+          <div class="time"><sam-icon name="clock" size="19"/><span>{{session.startTime | date:'HH:mm'}}</span><small>to</small><span>{{session.endTime | date:'HH:mm'}}</span></div>
+          <div class="card-status" [class.active]="session.status==='ACTIVE'">{{session.status}}</div>
+          @if(canVerify(session)){<a [routerLink]="['/student/scan',session.id]">Verify</a>}@else{<button disabled>{{session.status === 'CLOSED' ? 'Completed' : 'Not open yet'}}</button>}
+        </article>
+      }
+    </section>
+    @if(!sessions().length){<div class="no-sessions"><sam-icon name="calendar" size="48"/><h2>No sessions found</h2><p>There are no attendance sessions scheduled for this date.</p></div>}
+  }
+  <div class="note"><sam-icon name="info"/><span><strong>Note:</strong> Please verify your attendance during the scheduled time.</span></div>
+</div>

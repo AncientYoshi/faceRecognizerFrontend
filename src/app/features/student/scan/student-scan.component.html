@@ -1,0 +1,27 @@
+<div class="scan-page">
+  @if(state()==='idle'){
+    <section class="scan-stage">
+      <div class="session-context">@if(session()){<span>{{session()!.courseCode}}</span><strong>{{session()!.courseName}}</strong><small>{{session()!.startTime | date:'h:mm a'}} – {{session()!.endTime | date:'h:mm a'}}</small>}@else{<span>No active session</span>}</div>
+      <p class="eyebrow">ATTENDANCE</p><h1>Scan your face to verify</h1>
+      <div class="scanner idle-scanner"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><sam-icon name="scan" size="170"/></div>
+      <button class="primary" (click)="startCamera()" [disabled]="!session()"><sam-icon name="camera" size="26"/>Start scan</button>
+      <p class="hint">Your photo is used only to verify this attendance session.</p>
+      @if(errorMessage()){<div class="inline-error">{{errorMessage()}}</div>}
+    </section>
+  }
+  @if(state()==='camera'){
+    <section class="scan-stage camera-stage"><button class="cancel" (click)="cancel()"><sam-icon name="x" size="18"/>Cancel</button><p class="brand-title">SAM</p><h1>Position your face in the frame</h1>
+      <div class="scanner video-scanner"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><video #camera muted playsinline></video><div class="face-guide"></div><div class="scan-line"></div></div>
+      <button class="primary capture" (click)="captureAndVerify()"><sam-icon name="camera" size="25"/>Capture & verify</button><p class="hint">Look directly at the camera and keep your face well-lit.</p>
+    </section>
+  }
+  @if(state()==='verifying'){
+    <section class="scan-stage"><p class="brand-title">SAM</p><h1>Scanning your face</h1><div class="scanner verifying"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><sam-icon name="scan" size="160"/><div class="sweep"></div></div><h2>Verifying your identity…</h2><div class="progress"><i></i></div><p class="hint">This usually takes only a few seconds.</p><div class="tip"><sam-icon name="info"/><span><strong>Tip:</strong> Look directly at the camera and avoid wearing sunglasses or hats.</span></div></section>
+  }
+  @if(state()==='success'){
+    <section class="scan-stage result-stage"><h1>Face Detected</h1><div class="success-mark"><sam-icon name="check" size="105"/></div><h2>Attendance Verified</h2><p class="result-detail">{{result()?.message}} · {{result()?.similarity || 0 | percent:'1.0-0'}} match</p><div class="success-line"></div><button class="primary" (click)="continue()">Continue</button></section>
+  }
+  @if(state()==='failed'){
+    <section class="scan-stage result-stage"><h1>Verification Failed</h1><div class="failed-mark"><sam-icon name="x" size="95"/></div><h2>We couldn’t verify your face</h2><p class="result-detail">{{errorMessage() || result()?.message}}</p><button class="primary" (click)="tryAgain()"><sam-icon name="refresh"/>Try again</button><a routerLink="/student/sessions">Back to sessions</a></section>
+  }
+</div>

@@ -1,0 +1,323 @@
+<div class="attendance-page">
+  <header>
+    <div>
+      <p>Attendance management</p>
+      <h1>{{ title }}</h1>
+      <span>Live data from your Spring Boot attendance services.</span>
+    </div>
+    @if (mode === 'sessions') {
+      <button (click)="open()"><sam-icon name="plus" />Create session</button>
+    }
+    @if (mode === 'reports') {
+      <div class="exports">
+        <button (click)="download('pdf')"><sam-icon name="report" />PDF</button
+        ><button (click)="download('excel')"><sam-icon name="report" />Excel</button>
+      </div>
+    }
+  </header>
+  @if (mode !== 'analytics') {
+    <form class="filters" [formGroup]="filter" (ngSubmit)="load()">
+      <label
+        >Course<select formControlName="courseId">
+          <option value="">All courses</option>
+          @for (c of courses(); track c.id) {
+            <option [value]="c.id">{{ c.code }} — {{ c.name }}</option>
+          }
+        </select></label
+      >
+      @if (auth.hasRole('ADMIN') && (mode === 'records' || mode === 'reports')) {
+        <label
+          >Student<select formControlName="studentId">
+            <option value="">All students</option>
+            @for (s of students(); track s.id) {
+              <option [value]="s.studentId">{{ s.firstName }} {{ s.lastName }}</option>
+            }
+          </select></label
+        >
+      }
+      @if (mode === 'sessions') {
+        <label>Date<input type="date" formControlName="date" /></label
+        ><label
+          >Status<select formControlName="status">
+            <option value="">All statuses</option>
+            <option>SCHEDULED</option>
+            <option>ACTIVE</option>
+            <option>CLOSED</option>
+            <option>CANCELLED</option>
+          </select></label
+        >
+      }
+      @if (mode === 'reports') {
+        @if (auth.hasRole('TEACHER')) {
+          <label
+            >Period<select formControlName="period">
+              <option value="WEEK">Weekly</option>
+              <option value="MONTH">Monthly</option>
+            </select></label
+          >
+          <label
+            >Reference date<input type="date" formControlName="referenceDate"
+          /></label>
+          <label
+            >Student search<input
+              type="search"
+              formControlName="query"
+              placeholder="Name or student number"
+          /></label>
+        } @else {
+          <label
+            >Department<select formControlName="departmentId">
+              <option value="">All departments</option>
+              @for (d of departments(); track d.id) {
+                <option [value]="d.id">{{ d.name }}</option>
+              }
+            </select></label
+          >
+          <label>Month<input type="month" formControlName="month" /></label
+          ><label>From<input type="date" formControlName="from" /></label
+          ><label>To<input type="date" formControlName="to" /></label>
+        }
+      }
+      <button><sam-icon name="search" />Apply</button>
+    </form>
+  }
+  @if (error()) {
+    <div class="error"><sam-icon name="info" />{{ error() }}</div>
+  }
+  @if (mode === 'reports' && report()) {
+    <section class="report-stats">
+      <article>
+        <small>Attendance rate</small
+        ><strong>{{ report()!.attendanceRate | number: '1.1-1' }}%</strong>
+      </article>
+      <article>
+        <small>Recorded</small><strong>{{ report()!.totalRecords }}</strong>
+      </article>
+      <article>
+        <small>Expected</small><strong>{{ report()!.expectedAttendance }}</strong>
+      </article>
+      <article>
+        <small>Generated</small><strong>{{ report()!.generatedAt | date: 'MMM d, h:mm a' }}</strong>
+      </article>
+    </section>
+  }
+  @if (mode === 'reports' && auth.hasRole('TEACHER') && percentageReport()) {
+    <section class="report-stats percentage-stats">
+      <article>
+        <small>Report period</small><strong>{{ percentageReport()!.period }}</strong>
+      </article>
+      <article>
+        <small>Date range</small
+        ><strong
+          >{{ percentageReport()!.from | date: 'MMM d' }} –
+          {{ percentageReport()!.to | date: 'MMM d, y' }}</strong
+        >
+      </article>
+      <article>
+        <small>Students</small><strong>{{ percentageReport()!.students.totalElements }}</strong>
+      </article>
+      <article>
+        <small>Generated</small
+        ><strong>{{ percentageReport()!.generatedAt | date: 'MMM d, h:mm a' }}</strong>
+      </article>
+    </section>
+  }
+  @if (mode === 'sessions') {
+    <section class="cards">
+      @for (s of sessions(); track s.id) {
+        <article>
+          <div class="session-top">
+            <span class="status {{ s.status.toLowerCase() }}">{{ s.status }}</span
+            ><small>{{ s.sessionDate | date: 'MMM d, y' }}</small>
+          </div>
+          <h2>{{ s.courseName }}</h2>
+          <p>{{ s.courseCode }} · {{ s.teacherName }}</p>
+          <div class="time">
+            <sam-icon name="clock" />{{ s.startTime | date: 'h:mm a' }} –
+            {{ s.endTime | date: 'h:mm a' }}
+          </div>
+          <footer>
+            @if (s.status === 'SCHEDULED') {
+              <button (click)="open(s)">Edit</button
+              ><button (click)="action(s, 'start')">Start</button
+              ><button (click)="action(s, 'cancel')">Cancel</button
+              ><button (click)="remove(s)">Delete</button>
+            }
+            @if (s.status === 'ACTIVE') {
+              <button class="close" (click)="action(s, 'close')">Close session</button>
+            }
+          </footer>
+        </article>
+      }
+      @if (!loading() && !sessions().length) {
+        <div class="empty">No sessions found.</div>
+      }
+    </section>
+  }
+  @if (mode === 'records' || (mode === 'reports' && auth.hasRole('ADMIN'))) {
+    <section class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Course</th>
+              <th>Verified</th>
+              <th>Status</th>
+              <th>Similarity</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of records(); track r.id) {
+              <tr>
+                <td>
+                  <strong>{{ r.studentName }}</strong
+                  ><small>{{ r.studentNumber }}</small>
+                </td>
+                <td>
+                  <strong>{{ r.courseName }}</strong
+                  ><small>{{ r.courseCode }}</small>
+                </td>
+                <td>{{ r.verifiedAt | date: 'MMM d, y · h:mm a' }}</td>
+                <td>
+                  <span class="present">{{ r.status }}</span>
+                </td>
+                <td>{{ r.similarityScore * 100 | number: '1.0-1' }}%</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (!loading() && !records().length) {
+        <div class="empty">No attendance records found.</div>
+      }
+    </section>
+  }
+  @if (mode === 'reports' && auth.hasRole('TEACHER')) {
+    <section class="table-card percentage-table">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Course</th>
+              <th>Total sessions</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Attendance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (student of percentageRows(); track student.studentId + student.courseId) {
+              <tr>
+                <td>
+                  <strong>{{ student.studentName }}</strong
+                  ><small>{{ student.studentNumber }}</small>
+                </td>
+                <td>
+                  <strong>{{ student.courseName }}</strong
+                  ><small>{{ student.courseCode }}</small>
+                </td>
+                <td>{{ student.totalSessions }}</td>
+                <td><span class="present-count">{{ student.presentSessions }}</span></td>
+                <td><span class="absent-count">{{ student.absentSessions }}</span></td>
+                <td>
+                  <div class="percentage-cell">
+                    <strong>{{ student.attendancePercentage | number: '1.1-2' }}%</strong>
+                    <span><i [style.width.%]="student.attendancePercentage"></i></span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (!loading() && !percentageRows().length) {
+        <div class="empty">No enrolled students match these report filters.</div>
+      }
+      @if (percentageReport()) {
+        <footer class="report-pager">
+          <button [disabled]="percentageReport()!.students.first" (click)="movePercentage(-1)">
+            Previous
+          </button>
+          <span
+            >Page {{ percentageReport()!.students.page + 1 }} of
+            {{ percentageReport()!.students.totalPages || 1 }}</span
+          >
+          <button [disabled]="percentageReport()!.students.last" (click)="movePercentage(1)">
+            Next
+          </button>
+        </footer>
+      }
+    </section>
+  }
+  @if (mode === 'analytics') {
+    <section class="analytics-stats">
+      <article>
+        <small>Students</small><strong>{{ analytics().totalStudents }}</strong>
+      </article>
+      <article>
+        <small>Teachers</small><strong>{{ analytics().totalTeachers }}</strong>
+      </article>
+      <article>
+        <small>Attendance today</small
+        ><strong>{{ analytics().todayAttendance }} / {{ analytics().expectedAttendance }}</strong>
+      </article>
+      <article>
+        <small>Attendance rate</small
+        ><strong>{{ analytics().attendanceRate | number: '1.1-1' }}%</strong>
+      </article>
+    </section>
+    <section class="analytics-grid">
+      <article class="chart">
+        <h2>Attendance records by department</h2>
+        @for (d of analytics().departmentStatistics; track d.departmentId) {
+          <div class="bar-row">
+            <span>{{ d.departmentCode }}</span>
+            <div><i [style.width.%]="bar(d.attendanceRecords)"></i></div>
+            <strong>{{ d.attendanceRecords }}</strong>
+          </div>
+        }
+      </article>
+      <article class="chart">
+        <h2>Department overview</h2>
+        @for (d of analytics().departmentStatistics; track d.departmentId) {
+          <div class="dept">
+            <span>{{ d.departmentName }}</span
+            ><small
+              >{{ d.students }} students · {{ d.teachers }} teachers ·
+              {{ d.courses }} courses</small
+            >
+          </div>
+        }
+      </article>
+    </section>
+  }
+</div>
+@if (modal()) {
+  <div class="backdrop">
+    <section class="modal">
+      <header>
+        <h2>{{ editing() ? 'Edit' : 'Create' }} session</h2>
+        <button (click)="modal.set(false)"><sam-icon name="x" /></button>
+      </header>
+      <form [formGroup]="sessionForm" (ngSubmit)="save()">
+        <label
+          >Course<select formControlName="courseId">
+            @for (c of courses(); track c.id) {
+              <option [value]="c.id">{{ c.code }} — {{ c.name }}</option>
+            }
+          </select></label
+        ><label>Session date<input type="date" formControlName="sessionDate" /></label>
+        <div class="row">
+          <label>Start time<input type="datetime-local" formControlName="startTime" /></label
+          ><label>End time<input type="datetime-local" formControlName="endTime" /></label>
+        </div>
+        <footer>
+          <button type="button" (click)="modal.set(false)">Cancel</button
+          ><button class="save">Save session</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}

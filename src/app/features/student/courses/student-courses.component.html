@@ -1,0 +1,28 @@
+<div class="courses-page">
+  <header class="page-heading">
+    <div><p>Academic workspace</p><h1>My Courses</h1><span>Courses you are enrolled in for the current academic year.</span></div>
+    <div class="profile-chip"><span>{{ student.profile()?.departmentCode || '—' }}</span><div><strong>{{ student.profile()?.studentNumber || 'Student' }}</strong><small>{{ student.profile()?.departmentName || 'Department not assigned' }}</small></div></div>
+  </header>
+
+  <section class="course-toolbar">
+    <label><sam-icon name="search" size="19"/><input placeholder="Search courses, teachers, or departments" (input)="updateQuery($event)"></label>
+    <div><span><strong>{{ courses().length }}</strong> enrolled courses</span><button (click)="load(true)" [disabled]="loading()" aria-label="Refresh courses"><sam-icon name="refresh" size="18"/></button></div>
+  </section>
+
+  @if (loading()) {
+    <section class="course-grid skeleton-grid">@for(item of [1,2,3,4];track item){<article><i></i><i></i><i></i></article>}</section>
+  } @else if (error()) {
+    <div class="state error-state"><span><sam-icon name="info" size="35"/></span><h2>Courses unavailable</h2><p>{{ error() }}</p><button (click)="load(true)">Try again</button></div>
+  } @else if (!filteredCourses().length) {
+    <div class="state"><span><sam-icon name="book" size="39"/></span><h2>{{ query() ? 'No matching courses' : 'No enrolled courses' }}</h2><p>{{ query() ? 'Try a different search term.' : 'Your enrolled courses will appear here after enrollment.' }}</p></div>
+  } @else {
+    <section class="course-grid">
+      @for(course of filteredCourses();track course.id;let index=$index){
+        <article class="course-card card-{{index%4}}">
+          <div class="course-cover"><span class="department">{{course.departmentCode}}</span><div class="cover-icon"><sam-icon [name]="index%2===0 ? 'book' : 'building'" size="44"/></div><i class="orbit one"></i><i class="orbit two"></i><strong>{{course.code}}</strong></div>
+          <div class="course-body"><span class="semester">{{course.semester}} SEMESTER · {{course.academicYear}}</span><h2>{{course.name}}</h2><div class="teacher"><span>{{course.teacherName.charAt(0)}}</span><div><small>Course teacher</small><strong>{{course.teacherName}}</strong></div></div><dl><div><dt><sam-icon name="building" size="15"/>Department</dt><dd>{{course.departmentName}}</dd></div><div><dt><sam-icon name="users" size="15"/>Class size</dt><dd>{{course.enrollmentCount}} students</dd></div></dl></div>
+        </article>
+      }
+    </section>
+  }
+</div>

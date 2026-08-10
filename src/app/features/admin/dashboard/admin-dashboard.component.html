@@ -1,0 +1,58 @@
+<div class="dashboard" [class.loading]="loading()">
+  <section class="metrics">
+    <article><div class="metric-icon blue"><sam-icon name="users" size="25"/></div><div><span>Total Users</span><strong>{{ dashboard().totalUsers | number }}</strong><small class="up">↑ 12.5% <i>from last month</i></small></div></article>
+    <article><div class="metric-icon purple"><sam-icon name="teacher" size="25"/></div><div><span>Teachers</span><strong>{{ dashboard().totalTeachers | number }}</strong><small class="up">↑ 5.2% <i>from last month</i></small></div></article>
+    <article><div class="metric-icon green"><sam-icon name="user" size="25"/></div><div><span>Students</span><strong>{{ dashboard().totalStudents | number }}</strong><small class="up">↑ 15.3% <i>from last month</i></small></div></article>
+    <article><div class="metric-icon orange"><sam-icon name="book" size="25"/></div><div><span>Courses</span><strong>{{ dashboard().totalCourses | number }}</strong><small class="up">↑ 8.8% <i>from last month</i></small></div></article>
+    <article><div class="metric-icon red"><sam-icon name="calendar" size="25"/></div><div><span>Attendance Today</span><strong>{{ dashboard().attendanceRate | number:'1.1-1' }}%</strong><small class="up">↑ 4.6% <i>from yesterday</i></small></div></article>
+  </section>
+
+  <section class="middle-grid">
+    <article class="panel attendance-overview">
+      <div class="panel-title"><h3>Attendance Overview</h3><button>Last 7 Days <sam-icon name="chevron" size="14"/></button></div>
+      <div class="line-chart">
+        <div class="y-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div>
+        <svg viewBox="0 0 700 240" preserveAspectRatio="none" aria-label="Attendance trend">
+          <defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3478ef" stop-opacity=".18"/><stop offset="1" stop-color="#3478ef" stop-opacity="0"/></linearGradient></defs>
+          <path class="area" d="M20 104 L127 61 L234 138 L341 121 L448 128 L555 95 L662 61 L662 220 L20 220Z"/>
+          <polyline points="20,104 127,61 234,138 341,121 448,128 555,95 662,61"/>
+          <g><circle cx="20" cy="104" r="5"/><circle cx="127" cy="61" r="5"/><circle cx="234" cy="138" r="5"/><circle cx="341" cy="121" r="5"/><circle cx="448" cy="128" r="5"/><circle cx="555" cy="95" r="5"/><circle cx="662" cy="61" r="5"/></g>
+        </svg>
+        <div class="x-labels"><span>Jul 29</span><span>Jul 30</span><span>Jul 31</span><span>Aug 1</span><span>Aug 2</span><span>Aug 3</span><span>Aug 4</span></div>
+      </div>
+    </article>
+
+    <article class="panel recent-sessions">
+      <div class="panel-title"><h3>Recent Attendance Sessions</h3><a routerLink="/admin/sessions">View All</a></div>
+      <div class="session-list">
+        @for (session of dashboard().recentSessions.slice(0,4); track session.id; let index = $index) {
+          <div class="session"><span class="session-icon c{{ index }}"><sam-icon name="users" size="18"/></span><div class="session-name"><strong>{{ session.courseName }}</strong><small>{{ session.courseCode }} · {{ session.teacherName }}</small></div><div class="session-time"><em [class]="session.status.toLowerCase()">{{ session.status === 'CLOSED' ? 'Completed' : (session.status | titlecase) }}</em><small>{{ session.startTime | date:'hh:mm a' }} - {{ session.endTime | date:'hh:mm a' }}</small></div></div>
+        }
+      </div>
+    </article>
+
+    <article class="panel departments">
+      <div class="panel-title"><h3>Attendance by Department</h3><button>This Month <sam-icon name="chevron" size="14"/></button></div>
+      <div class="department-content">
+        <div class="donut"><div><span>Average</span><strong>{{ dashboard().attendanceRate | number:'1.1-1' }}%</strong></div></div>
+        <div class="legend">
+          @for (department of dashboard().departmentStatistics.slice(0,5); track department.departmentId; let index = $index) {
+            <div><i class="dot d{{index}}"></i><span>{{ department.departmentName }}</span><strong>{{ department.attendanceRecords | number }}</strong></div>
+          }
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="bottom-grid">
+    <article class="panel user-overview">
+      <div class="panel-title"><h3>User Overview</h3><a routerLink="/admin/users">View All</a></div>
+      <div class="table-wrap"><table><thead><tr><th>Role</th><th>Total</th><th>Active</th><th>Inactive</th><th>New This Month</th></tr></thead><tbody><tr><td><span class="role-icon"><sam-icon name="user" size="15"/></span>Administrators</td><td>12</td><td class="positive">12</td><td class="negative">0</td><td>1</td></tr><tr><td><span class="role-icon"><sam-icon name="user" size="15"/></span>Teachers</td><td>{{dashboard().totalTeachers}}</td><td class="positive">{{dashboard().totalTeachers - 3}}</td><td class="negative">3</td><td>5</td></tr><tr><td><span class="role-icon"><sam-icon name="user" size="15"/></span>Students</td><td>{{dashboard().totalStudents | number}}</td><td class="positive">{{dashboard().totalStudents - 35 | number}}</td><td class="negative">35</td><td>86</td></tr></tbody></table></div>
+    </article>
+    <article class="panel registrations">
+      <div class="panel-title"><h3>Recent Registrations</h3><a routerLink="/admin/users">View All</a></div>
+      @for (user of dashboard().recentUsers; track user.id; let index = $index) {<div class="registration"><span class="initials i{{index}}">{{ initials(user.firstName,user.lastName) }}</span><div><strong>{{user.firstName}} {{user.lastName}}</strong><small>{{user.roles[0] | titlecase}} @if(user.studentNumber){ · {{user.studentNumber}} }</small></div><time>{{user.createdAt | date:'MMM d, y'}}<small>{{user.createdAt | date:'hh:mm a'}}</small></time></div>}
+    </article>
+    <article class="panel quick-actions"><div class="panel-title"><h3>Quick Actions</h3></div><div class="action-grid"><a routerLink="/admin/teachers"><sam-icon name="teacher"/><span>Add New Teacher</span></a><a routerLink="/admin/students"><sam-icon name="users"/><span>Add New Student</span></a><a routerLink="/admin/courses"><sam-icon name="book"/><span>Create Course</span></a><a routerLink="/admin/sessions"><sam-icon name="calendar"/><span>Create Session</span></a><a routerLink="/admin/reports"><sam-icon name="report"/><span>Generate Report</span></a><a routerLink="/admin/settings"><sam-icon name="settings"/><span>System Settings</span></a></div></article>
+  </section>
+</div>

@@ -1,0 +1,22 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { AcademicService } from '../../../core/services/academic.service';
+import { UserService } from '../../../core/services/user.service';
+import { AssignedStudent, AssignedTeacher, Department, ProfileAssignment, UserSummary } from '../../../core/models/api.models';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+
+@Component({selector:'app-department-assignments',standalone:true,imports:[IconComponent],templateUrl:'./department-assignments.component.html',styleUrl:'./department-assignments.component.css'})
+export class DepartmentAssignmentsComponent implements OnInit{
+  private academics=inject(AcademicService);private users=inject(UserService);
+  readonly departments=signal<Department[]>([]);readonly teachers=signal<UserSummary[]>([]);readonly students=signal<UserSummary[]>([]);
+  readonly assignedTeachers=signal<AssignedTeacher[]>([]);readonly assignedStudents=signal<AssignedStudent[]>([]);
+  readonly departmentId=signal('');readonly teacherId=signal('');readonly studentId=signal('');readonly teacherQuery=signal('');readonly studentQuery=signal('');readonly teacherPage=signal(0);readonly studentPage=signal(0);readonly teacherPages=signal(0);readonly studentPages=signal(0);readonly teacherTotal=signal(0);readonly studentTotal=signal(0);readonly teacherLoading=signal(false);readonly studentLoading=signal(false);readonly result=signal<ProfileAssignment|null>(null);readonly error=signal('');readonly working=signal(false);
+  ngOnInit(){this.academics.departments('',0,100).subscribe({next:x=>{this.departments.set(x.content);this.selectDepartment(x.content[0]?.id||'')},error:e=>this.fail(e)});this.users.listAll().subscribe({next:x=>{const teachers=x.filter(u=>u.roles.includes('TEACHER')&&u.teacherId),students=x.filter(u=>u.roles.includes('STUDENT')&&u.studentId);this.teachers.set(teachers);this.students.set(students);this.teacherId.set(teachers[0]?.teacherId||'');this.studentId.set(students[0]?.studentId||'')},error:e=>this.fail(e)})}
+  selectDepartment(id:string){this.departmentId.set(id);this.teacherPage.set(0);this.studentPage.set(0);this.result.set(null);if(id)this.loadMembers()}
+  loadMembers(kind?:'teachers'|'students'){if(!this.departmentId())return;this.error.set('');if(!kind||kind==='teachers'){this.teacherLoading.set(true);this.academics.departmentTeachers(this.departmentId(),this.teacherQuery(),this.teacherPage(),20).subscribe({next:x=>{this.assignedTeachers.set(x.content);this.teacherPages.set(x.totalPages);this.teacherTotal.set(x.totalElements);this.teacherLoading.set(false)},error:e=>this.fail(e)})}if(!kind||kind==='students'){this.studentLoading.set(true);this.academics.departmentStudents(this.departmentId(),this.studentQuery(),this.studentPage(),20).subscribe({next:x=>{this.assignedStudents.set(x.content);this.studentPages.set(x.totalPages);this.studentTotal.set(x.totalElements);this.studentLoading.set(false)},error:e=>this.fail(e)})}}
+  search(kind:'teachers'|'students'){if(kind==='teachers')this.teacherPage.set(0);else this.studentPage.set(0);this.loadMembers(kind)}
+  move(kind:'teachers'|'students',delta:number){if(kind==='teachers')this.teacherPage.update(x=>x+delta);else this.studentPage.update(x=>x+delta);this.loadMembers(kind)}
+  assign(kind:'teachers'|'students'){const profileId=kind==='teachers'?this.teacherId():this.studentId();if(!this.departmentId()||!profileId)return;this.working.set(true);this.error.set('');this.academics.assignDepartment(kind,this.departmentId(),profileId).subscribe({next:x=>this.changed(kind,x),error:e=>this.fail(e)})}
+  unassign(kind:'teachers'|'students',profileId:string,fullName:string){if(!confirm(`Unassign ${fullName} from this department?`))return;this.working.set(true);this.error.set('');this.academics.unassignDepartment(kind,this.departmentId(),profileId).subscribe({next:x=>this.changed(kind,x),error:e=>this.fail(e)})}
+  private changed(kind:'teachers'|'students',assignment:ProfileAssignment){this.result.set(assignment);this.working.set(false);this.loadMembers(kind);this.academics.departments('',0,100).subscribe(x=>this.departments.set(x.content))}
+  private fail(e:any){this.working.set(false);this.teacherLoading.set(false);this.studentLoading.set(false);this.error.set(e.status===0?'Cannot reach the backend API.':e.error?.message||'The assignment could not be completed.')}
+}

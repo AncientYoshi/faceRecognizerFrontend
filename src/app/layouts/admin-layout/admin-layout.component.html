@@ -1,0 +1,55 @@
+<div class="admin-shell" [class.sidebar-visible]="sidebarOpen()">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><span>✓</span></div>
+      <div><strong>Smart Attendance</strong><small>{{auth.hasRole('ADMIN')?'Admin Portal':'Teacher Portal'}}</small></div>
+      <button class="mobile-close" (click)="closeSidebar()"><sam-icon name="x" /></button>
+    </div>
+
+    <div class="admin-profile">
+      <div class="avatar">{{ auth.user()?.firstName?.charAt(0) || 'A' }}<i></i></div>
+      <div><strong>{{ auth.user()?.firstName || 'Admin' }}</strong><span>{{ auth.hasRole('ADMIN') ? 'System Administrator' : 'Faculty Member' }}</span></div>
+      <sam-icon name="chevron" size="16" />
+    </div>
+
+    <nav (click)="closeSidebar()">
+      <a [routerLink]="auth.hasRole('ADMIN') ? '/admin/dashboard' : '/admin/teacher-dashboard'" routerLinkActive="active"><sam-icon name="home" />Dashboard</a>
+      @if (auth.hasRole('ADMIN')) {
+        <p>Management</p>
+        <a routerLink="/admin/users" routerLinkActive="active"><sam-icon name="users" />Users<sam-icon class="tail" name="arrow" size="16" /></a>
+        <a routerLink="/admin/teachers" routerLinkActive="active"><sam-icon name="teacher" />Teachers</a>
+        <a routerLink="/admin/students" routerLinkActive="active"><sam-icon name="users" />Students</a>
+        <a routerLink="/admin/courses" routerLinkActive="active"><sam-icon name="book" />Courses</a>
+        <a routerLink="/admin/departments" routerLinkActive="active"><sam-icon name="building" />Departments</a>
+        <a routerLink="/admin/enrollments" routerLinkActive="active"><sam-icon name="calendar" />Enrollments</a>
+        <a routerLink="/admin/assignments" routerLinkActive="active"><sam-icon name="building" />Department Assignments</a>
+      }
+      @if (auth.hasRole('TEACHER')) {<a routerLink="/admin/teacher-courses" routerLinkActive="active"><sam-icon name="book" />My Courses</a>}
+      <a routerLink="/admin/timetables" routerLinkActive="active"><sam-icon name="calendar" />Timetables</a>
+      <p>Attendance</p>
+      <a routerLink="/admin/sessions" routerLinkActive="active"><sam-icon name="calendar" />Attendance Sessions</a>
+      <a routerLink="/admin/records" routerLinkActive="active"><sam-icon name="calendar" />Attendance Records</a>
+      <a routerLink="/admin/reports" routerLinkActive="active"><sam-icon name="report" />Reports</a>
+      @if (auth.hasRole('ADMIN')) {<a routerLink="/admin/analytics" routerLinkActive="active"><sam-icon name="chart" />Analytics</a>}
+      @if (auth.hasRole('ADMIN')) {
+        <p>System</p>
+        <a routerLink="/admin/settings" routerLinkActive="active"><sam-icon name="settings" />System Settings</a>
+        <a routerLink="/admin/roles" routerLinkActive="active"><sam-icon name="users" />Roles & Permissions</a>
+        <a routerLink="/admin/audit" routerLinkActive="active"><sam-icon name="report" />Audit Logs</a>
+      }
+    </nav>
+    <button class="logout" (click)="auth.logout()"><sam-icon name="logout" />Logout</button>
+  </aside>
+  <button class="scrim" aria-label="Close menu" (click)="closeSidebar()"></button>
+
+  <section class="workspace">
+    <header class="topbar">
+      <button class="menu" (click)="sidebarOpen.set(true)" aria-label="Open menu"><sam-icon name="menu" /></button>
+      <div class="welcome"><strong>Dashboard</strong><span>Welcome back, {{ auth.user()?.firstName || 'Admin' }}! Here’s what’s happening in your system.</span></div>
+      <label class="search"><sam-icon name="search" size="19" /><input placeholder="Search here..."/><kbd>Ctrl + K</kbd></label>
+      <div class="date"><sam-icon name="calendar" /><div><strong>{{ now | date:'MMM d, y' }}</strong><span>{{ now | date:'EEEE, h:mm a' }}</span></div></div>
+    </header>
+    <main><router-outlet /></main>
+    <footer>© 2026 Smart Attendance System. All rights reserved. <span>Version 1.0.0</span></footer>
+  </section>
+</div>
