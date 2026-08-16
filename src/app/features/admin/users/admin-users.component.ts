@@ -31,6 +31,7 @@ export class AdminUsersComponent implements OnInit {
   readonly modalOpen = signal(false);
   readonly editingUser = signal<UserSummary | null>(null);
   readonly deleteTarget = signal<UserSummary | null>(null);
+  readonly deleteError = signal('');
   readonly selectedRole = signal<Role | null>(null);
   readonly isEdit = computed(() => !!this.editingUser());
 
@@ -88,6 +89,18 @@ export class AdminUsersComponent implements OnInit {
 
   closeModal(): void { if (!this.saving()) this.modalOpen.set(false); }
 
+  openDelete(user: UserSummary): void {
+    this.error.set('');
+    this.deleteError.set('');
+    this.deleteTarget.set(user);
+  }
+
+  cancelDelete(): void {
+    if (this.saving()) return;
+    this.deleteError.set('');
+    this.deleteTarget.set(null);
+  }
+
   selectRole(role: Role): void { this.selectedRole.set(role); }
 
   hasRole(role: Role): boolean { return this.selectedRole() === role; }
@@ -95,7 +108,7 @@ export class AdminUsersComponent implements OnInit {
   submit(): void {
     if (this.form.invalid || !this.selectedRole()) { this.form.markAllAsTouched(); this.error.set(!this.selectedRole() ? 'Select a role.' : 'Check the highlighted form fields.'); return; }
     const value = this.form.getRawValue();
-    if (this.hasRole('STUDENT') && !value.studentNumber.trim()) { this.error.set('Student number is required for the Student role.'); return; }
+    if (this.hasRole('STUDENT') && !value.studentNumber.trim()) { this.error.set('Roll number is required for the Student role.'); return; }
     if (this.hasRole('TEACHER') && !value.employeeNumber.trim()) { this.error.set('Employee number is required for the Teacher role.'); return; }
     this.saving.set(true); this.error.set('');
     const common = { email: value.email.trim(), firstName: value.firstName.trim(), lastName: value.lastName.trim(), roles: [this.selectedRole()!], studentNumber: this.hasRole('STUDENT') ? value.studentNumber.trim() : null, employeeNumber: this.hasRole('TEACHER') ? value.employeeNumber.trim() : null };
@@ -111,10 +124,10 @@ export class AdminUsersComponent implements OnInit {
   confirmDelete(): void {
     const target = this.deleteTarget();
     if (!target) return;
-    this.saving.set(true); this.error.set('');
+    this.saving.set(true); this.error.set(''); this.deleteError.set('');
     this.users.delete(target.id).subscribe({
-      next: () => { this.saving.set(false); this.deleteTarget.set(null); this.showToast('User deleted successfully.'); this.load(Math.max(0, this.page().content.length === 1 ? this.page().page - 1 : this.page().page)); },
-      error: error => { this.saving.set(false); this.deleteTarget.set(null); this.error.set(this.message(error, 'Could not delete the user.')); },
+      next: () => { this.saving.set(false); this.deleteError.set(''); this.deleteTarget.set(null); this.showToast('User deleted successfully.'); this.load(Math.max(0, this.page().content.length === 1 ? this.page().page - 1 : this.page().page)); },
+      error: error => { this.saving.set(false); this.deleteError.set(this.message(error, 'Could not delete the user.')); },
     });
   }
 
@@ -125,5 +138,10 @@ export class AdminUsersComponent implements OnInit {
   roleCount(role: Role): number { return this.page().content.filter(user => this.userRole(user) === role).length; }
 
   private showToast(message: string): void { this.toast.set(message); window.setTimeout(() => this.toast.set(''), 2800); }
-  private message(error: any, fallback: string): string { return error.status === 0 ? 'Cannot reach the Smart Attendance API. Please check your connection.' : (error.error?.message || error.error?.detail || fallback); }
+  private message(error: any, fallback: string): string {
+    if (error.status === 0) return 'Cannot reach the Smart Attendance API. Please check your connection.';
+    let body=error.error;
+    if(typeof body==='string'){try{body=JSON.parse(body)}catch{return body||fallback}}
+    return body?.message||body?.detail||error.message||fallback;
+  }
 }

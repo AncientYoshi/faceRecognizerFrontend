@@ -1,19 +1,27 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, of, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, concat, finalize, of, shareReplay, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, CurrentUser, PublicDepartment, RegisterUserPayload, RegisterUserResponse, Role } from '../models/api.models';
 
 const ACCESS_KEY = 'sam_access_token';
 const REFRESH_KEY = 'sam_refresh_token';
 const USER_KEY = 'sam_current_user';
+const DEPARTMENTS_KEY = 'sam_public_departments_v1';
+
+interface PublicDepartmentCache {
+  savedAt: string;
+  departments: PublicDepartment[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly _user = signal<CurrentUser | null>(this.readUser());
+  private departmentCache = this.readDepartments();
+  private departmentRefresh$: Observable<PublicDepartment[]> | null = null;
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => !!this.accessToken && !!this._user());
@@ -35,7 +43,10 @@ export class AuthService {
   }
 
   publicDepartments(): Observable<PublicDepartment[]> {
-    return this.http.get<PublicDepartment[]>(`${environment.apiUrl}/public/departments`);
+    const refresh = this.refreshDepartments();
+    return this.departmentCache
+      ? concat(of(this.departmentCache), refresh.pipe(catchError(() => EMPTY)))
+      : refresh;
   }
 
   refresh(): Observable<AuthResponse> {
@@ -105,5 +116,38 @@ export class AuthService {
   private readUser(): CurrentUser | null {
     try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); }
     catch { return null; }
+  }
+
+  private refreshDepartments(): Observable<PublicDepartment[]> {
+    if (this.departmentRefresh$) return this.departmentRefresh$;
+    this.departmentRefresh$ = this.http.get<PublicDepartment[]>(`${environment.apiUrl}/public/departments`).pipe(
+      tap(departments => this.storeDepartments(departments)),
+      finalize(() => this.departmentRefresh$ = null),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+    return this.departmentRefresh$;
+  }
+
+  private storeDepartments(departments: PublicDepartment[]): void {
+    this.departmentCache = departments;
+    try {
+      const cache: PublicDepartmentCache = { savedAt: new Date().toISOString(), departments };
+      localStorage.setItem(DEPARTMENTS_KEY, JSON.stringify(cache));
+    } catch { /* Browsers may disable storage; the in-memory cache still works. */ }
+  }
+
+  private readDepartments(): PublicDepartment[] | null {
+    try {
+      const cache = JSON.parse(localStorage.getItem(DEPARTMENTS_KEY) || 'null') as PublicDepartmentCache | null;
+      if (!cache || !Array.isArray(cache.departments)) return null;
+      const valid = cache.departments.every(department =>
+        typeof department?.id === 'string' &&
+        typeof department?.code === 'string' &&
+        typeof department?.name === 'string'
+      );
+      return valid ? cache.departments : null;
+    } catch {
+      return null;
+    }
   }
 }

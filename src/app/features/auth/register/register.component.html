@@ -24,7 +24,7 @@
           <h2>Welcome, {{ account.firstName }}!</h2>
           <div class="success-details">
             <div><small>Account role</small><strong>{{ account.role === 'STUDENT' ? 'Student' : 'Teacher' }}</strong></div>
-            <div><small>{{ account.role === 'STUDENT' ? 'Student number' : 'Employee number' }}</small><strong>{{ account.studentNumber || account.employeeNumber }}</strong></div>
+            <div><small>{{ account.role === 'STUDENT' ? 'Roll number' : 'Employee number' }}</small><strong>{{ account.studentNumber || account.employeeNumber }}</strong></div>
             <div class="wide"><small>Department</small><strong>{{ account.departmentCode }} · {{ account.departmentName }}</strong></div>
           </div>
           <p class="success-copy">Your account is ready. Sign in with <strong>{{ account.email }}</strong> to open your portal.</p>

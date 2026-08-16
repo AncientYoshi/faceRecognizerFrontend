@@ -38,7 +38,12 @@ export class RegisterComponent implements OnInit {
     this.auth.publicDepartments().subscribe({
       next: departments => {
         this.departments.set(departments);
-        if (departments.length === 1) this.form.controls.departmentId.setValue(departments[0].id);
+        const selectedDepartment = this.form.controls.departmentId.value;
+        if (selectedDepartment && !departments.some(department => department.id === selectedDepartment)) {
+          this.form.controls.departmentId.setValue('');
+        } else if (!selectedDepartment && departments.length === 1) {
+          this.form.controls.departmentId.setValue(departments[0].id);
+        }
         this.loadingDepartments.set(false);
       },
       error: error => {
@@ -94,7 +99,7 @@ export class RegisterComponent implements OnInit {
   }
 
   referenceLabel(): string {
-    return this.form.controls.role.value === 'STUDENT' ? 'Student number' : 'Employee number';
+    return this.form.controls.role.value === 'STUDENT' ? 'Roll number' : 'Employee number';
   }
 
   referencePlaceholder(): string {

@@ -1,2 +1,78 @@
-<div class="people"><header><div><p>User management</p><h1>{{title}}</h1><span>Manage {{title.toLowerCase()}} and their portal access.</span></div><button (click)="open()"><sam-icon name="plus"/>Add {{role==='TEACHER'?'teacher':'student'}}</button></header>@if(error()){<div class="error">{{error()}}</div>}<section class="grid">@for(u of people();track u.id){<article><div class="avatar">{{u.firstName[0]}}{{u.lastName[0]}}</div><span class="status" [class.off]="!u.enabled">{{u.enabled?'Active':'Disabled'}}</span><h2>{{u.firstName}} {{u.lastName}}</h2><p>{{u.email}}</p><dl><dt>{{role==='TEACHER'?'Employee':'Student'}} number</dt><dd>{{role==='TEACHER'?u.employeeNumber:u.studentNumber}}</dd></dl><footer><button (click)="open(u)"><sam-icon name="settings"/>Edit</button><button (click)="remove(u)"><sam-icon name="x"/>Delete</button></footer></article>}@if(!loading()&&!people().length){<div class="empty">No {{title.toLowerCase()}} found.</div>}</section></div>
-@if(modal()){<div class="backdrop"><section class="modal"><header><h2>{{editing()?'Edit':'Add'}} {{role==='TEACHER'?'teacher':'student'}}</h2><button (click)="modal.set(false)"><sam-icon name="x"/></button></header><form [formGroup]="form" (ngSubmit)="save()"><div class="row"><label>First name<input formControlName="firstName"></label><label>Last name<input formControlName="lastName"></label></div><label>Email<input formControlName="email" type="email"></label><label>{{editing()?'New password (optional)':'Password'}}<input formControlName="password" type="password"></label><label>{{role==='TEACHER'?'Employee':'Student'}} number<input formControlName="reference"></label>@if(editing()){<label class="check"><input type="checkbox" formControlName="enabled">Account enabled</label>}<footer><button type="button" (click)="modal.set(false)">Cancel</button><button class="save">Save</button></footer></form></section></div>}
+<div class="people">
+  <header>
+    <div>
+      <p>User management</p>
+      <h1>{{ title }}</h1>
+      <span>Manage {{ title.toLowerCase() }} and their portal access.</span>
+    </div>
+    <button (click)="open()">
+      <sam-icon name="plus" />Add {{ role === 'TEACHER' ? 'teacher' : 'student' }}
+    </button>
+  </header>
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+  <section class="grid">
+    @for (u of people(); track u.id) {
+      <article>
+        <div class="avatar">{{ u.firstName[0] }}{{ u.lastName[0] }}</div>
+        <span class="status" [class.off]="!u.enabled">{{ u.enabled ? 'Active' : 'Disabled' }}</span>
+        <h2>{{ u.firstName }} {{ u.lastName }}</h2>
+        <p>{{ u.email }}</p>
+        <dl>
+          <dt>{{ role === 'TEACHER' ? 'Employee number' : 'Roll number' }}</dt>
+          <dd>{{ role === 'TEACHER' ? u.employeeNumber : u.studentNumber }}</dd>
+        </dl>
+        <footer>
+          <button (click)="open(u)"><sam-icon name="settings" />Edit</button
+          ><button (click)="remove(u)"><sam-icon name="x" />Delete</button>
+        </footer>
+      </article>
+    }
+    @if (!loading() && !people().length) {
+      <div class="empty">No {{ title.toLowerCase() }} found.</div>
+    }
+  </section>
+</div>
+@if (modal()) {
+  <div class="backdrop">
+    <section class="modal">
+      <header>
+        <h2>{{ editing() ? 'Edit' : 'Add' }} {{ role === 'TEACHER' ? 'teacher' : 'student' }}</h2>
+        <button (click)="modal.set(false)"><sam-icon name="x" /></button>
+      </header>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="row">
+          <label>First name<input formControlName="firstName" /></label
+          ><label>Last name<input formControlName="lastName" /></label>
+        </div>
+        <label>Email<input formControlName="email" type="email" /></label
+        ><label
+          >{{ editing() ? 'New password (optional)' : 'Password'
+          }}<input formControlName="password" type="password" /></label
+        ><label
+          >{{ role === 'TEACHER' ? 'Employee number' : 'Roll number' }}<input
+            formControlName="reference"
+        /></label>
+        @if (editing()) {
+          <label class="check"
+            ><input type="checkbox" formControlName="enabled" />Account enabled</label
+          >
+        }
+        <footer>
+          <button type="button" (click)="modal.set(false)">Cancel</button
+          ><button class="save">Save</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+@if (deleteError()) {
+  <div class="delete-toast" role="alert">
+    <sam-icon name="info" size="19" />
+    <span>{{ deleteError() }}</span>
+    <button type="button" aria-label="Dismiss error" (click)="deleteError.set('')">
+      <sam-icon name="x" size="17" />
+    </button>
+  </div>
+}
