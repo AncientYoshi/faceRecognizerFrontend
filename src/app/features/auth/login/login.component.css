@@ -2,3 +2,4 @@
 @media(max-width:850px){.login-page{grid-template-columns:1fr}.showcase{display:none}.login-page>main{padding:26px}.mobile-brand{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:42px}.mobile-brand .mark{width:35px;height:40px;color:#fff}.mobile-brand strong{font-size:17px}}
 .preview-buttons{grid-template-columns:repeat(3,1fr)}
 @media(max-width:420px){.preview-buttons{grid-template-columns:1fr}.login-card h2{font-size:25px}.login-page>main{place-items:start center;padding-top:30px}}
+.register-prompt{text-align:center;margin:20px 0 0;color:#718096;font-size:15px}.register-prompt a{color:#087dcc;text-decoration:none;font-weight:750}.register-prompt a:hover{text-decoration:underline}

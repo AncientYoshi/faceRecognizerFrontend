@@ -1,4 +1,5 @@
 export type Role = 'ADMIN' | 'TEACHER' | 'STUDENT';
+export type SelfRegistrationRole = 'TEACHER' | 'STUDENT';
 
 export interface AuthResponse {
   accessToken: string;
@@ -15,6 +16,39 @@ export interface CurrentUser {
   enabled: boolean;
   roles: Role[];
   createdAt: string;
+}
+
+export interface PublicDepartment {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface RegisterUserPayload {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: SelfRegistrationRole;
+  studentNumber: string | null;
+  employeeNumber: string | null;
+  departmentId: string;
+}
+
+export interface RegisterUserResponse {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: SelfRegistrationRole;
+  studentId: string | null;
+  studentNumber: string | null;
+  teacherId: string | null;
+  employeeNumber: string | null;
+  departmentId: string;
+  departmentCode: string;
+  departmentName: string;
+  registeredAt: string;
 }
 
 export interface StudentProfile {

@@ -1,13 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, IconComponent],
+  imports: [ReactiveFormsModule, RouterLink, IconComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -30,8 +30,7 @@ export class LoginComponent {
     this.auth.login(email, password).subscribe({
       next: user => {
         this.loading.set(false);
-        const path = user.roles.includes('ADMIN') ? '/admin/dashboard' : user.roles.includes('TEACHER') ? '/admin/teacher-dashboard' : '/student/dashboard';
-        this.router.navigateByUrl(path);
+        this.router.navigateByUrl(this.auth.homeFor(this.auth.roleOf(user)));
       },
       error: err => {
         this.loading.set(false);

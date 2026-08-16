@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, CurrentUser, Role } from '../models/api.models';
+import { AuthResponse, CurrentUser, PublicDepartment, RegisterUserPayload, RegisterUserResponse, Role } from '../models/api.models';
 
 const ACCESS_KEY = 'sam_access_token';
 const REFRESH_KEY = 'sam_refresh_token';
@@ -17,10 +17,7 @@ export class AuthService {
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => !!this.accessToken && !!this._user());
-  readonly primaryRole = computed<Role | null>(() => {
-    const roles = this._user()?.roles ?? [];
-    return roles.includes('ADMIN') ? 'ADMIN' : roles.includes('TEACHER') ? 'TEACHER' : roles.includes('STUDENT') ? 'STUDENT' : null;
-  });
+  readonly primaryRole = computed<Role | null>(() => this.roleOf(this._user()));
 
   get accessToken(): string | null { return localStorage.getItem(ACCESS_KEY); }
   get refreshToken(): string | null { return localStorage.getItem(REFRESH_KEY); }
@@ -31,6 +28,14 @@ export class AuthService {
       switchMap(() => this.http.get<CurrentUser>(`${environment.apiUrl}/me`)),
       tap(user => this.storeUser(user)),
     );
+  }
+
+  register(payload: RegisterUserPayload): Observable<RegisterUserResponse> {
+    return this.http.post<RegisterUserResponse>(`${environment.apiUrl}/auth/register`, payload);
+  }
+
+  publicDepartments(): Observable<PublicDepartment[]> {
+    return this.http.get<PublicDepartment[]>(`${environment.apiUrl}/public/departments`);
   }
 
   refresh(): Observable<AuthResponse> {
@@ -75,7 +80,16 @@ export class AuthService {
     this.router.navigateByUrl('/login');
   }
 
-  hasRole(role: Role): boolean { return this._user()?.roles.includes(role) ?? false; }
+  roleOf(user: Pick<CurrentUser, 'roles'> | null | undefined): Role | null {
+    if (!user) return null;
+    return user.roles.includes('ADMIN') ? 'ADMIN' : user.roles[0] ?? null;
+  }
+
+  homeFor(role = this.primaryRole()): string {
+    return role === 'ADMIN' ? '/admin/dashboard' : role === 'TEACHER' ? '/admin/teacher-dashboard' : '/student/dashboard';
+  }
+
+  hasRole(role: Role): boolean { return this.primaryRole() === role; }
   isPreview(): boolean { return this.accessToken === 'preview-token'; }
 
   private storeTokens(tokens: AuthResponse): void {

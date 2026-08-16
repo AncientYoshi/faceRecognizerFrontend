@@ -31,7 +31,7 @@ export class AdminUsersComponent implements OnInit {
   readonly modalOpen = signal(false);
   readonly editingUser = signal<UserSummary | null>(null);
   readonly deleteTarget = signal<UserSummary | null>(null);
-  readonly selectedRoles = signal<Role[]>([]);
+  readonly selectedRole = signal<Role | null>(null);
   readonly isEdit = computed(() => !!this.editingUser());
 
   readonly form = this.fb.nonNullable.group({
@@ -69,7 +69,7 @@ export class AdminUsersComponent implements OnInit {
   openCreate(): void {
     this.error.set('');
     this.editingUser.set(null);
-    this.selectedRoles.set(['STUDENT']);
+    this.selectedRole.set('STUDENT');
     this.form.reset({ firstName: '', lastName: '', email: '', password: '', studentNumber: '', employeeNumber: '', enabled: true });
     this.form.controls.password.setValidators([Validators.required, Validators.minLength(8)]);
     this.form.controls.password.updateValueAndValidity();
@@ -79,7 +79,7 @@ export class AdminUsersComponent implements OnInit {
   openEdit(user: UserSummary): void {
     this.error.set('');
     this.editingUser.set(user);
-    this.selectedRoles.set([...user.roles]);
+    this.selectedRole.set(this.auth.roleOf(user));
     this.form.reset({ firstName: user.firstName, lastName: user.lastName, email: user.email, password: '', studentNumber: user.studentNumber ?? '', employeeNumber: user.employeeNumber ?? '', enabled: user.enabled });
     this.form.controls.password.setValidators([Validators.minLength(8)]);
     this.form.controls.password.updateValueAndValidity();
@@ -88,19 +88,17 @@ export class AdminUsersComponent implements OnInit {
 
   closeModal(): void { if (!this.saving()) this.modalOpen.set(false); }
 
-  toggleRole(role: Role): void {
-    this.selectedRoles.update(roles => roles.includes(role) ? roles.filter(value => value !== role) : [...roles, role]);
-  }
+  selectRole(role: Role): void { this.selectedRole.set(role); }
 
-  hasRole(role: Role): boolean { return this.selectedRoles().includes(role); }
+  hasRole(role: Role): boolean { return this.selectedRole() === role; }
 
   submit(): void {
-    if (this.form.invalid || !this.selectedRoles().length) { this.form.markAllAsTouched(); this.error.set(!this.selectedRoles().length ? 'Select at least one role.' : 'Check the highlighted form fields.'); return; }
+    if (this.form.invalid || !this.selectedRole()) { this.form.markAllAsTouched(); this.error.set(!this.selectedRole() ? 'Select a role.' : 'Check the highlighted form fields.'); return; }
     const value = this.form.getRawValue();
     if (this.hasRole('STUDENT') && !value.studentNumber.trim()) { this.error.set('Student number is required for the Student role.'); return; }
     if (this.hasRole('TEACHER') && !value.employeeNumber.trim()) { this.error.set('Employee number is required for the Teacher role.'); return; }
     this.saving.set(true); this.error.set('');
-    const common = { email: value.email.trim(), firstName: value.firstName.trim(), lastName: value.lastName.trim(), roles: this.selectedRoles(), studentNumber: this.hasRole('STUDENT') ? value.studentNumber.trim() : null, employeeNumber: this.hasRole('TEACHER') ? value.employeeNumber.trim() : null };
+    const common = { email: value.email.trim(), firstName: value.firstName.trim(), lastName: value.lastName.trim(), roles: [this.selectedRole()!], studentNumber: this.hasRole('STUDENT') ? value.studentNumber.trim() : null, employeeNumber: this.hasRole('TEACHER') ? value.employeeNumber.trim() : null };
     const request = this.isEdit()
       ? this.users.update(this.editingUser()!.id, { ...common, password: value.password || null, enabled: value.enabled } as UpdateUserPayload)
       : this.users.create({ ...common, password: value.password } as CreateUserPayload);
@@ -123,7 +121,8 @@ export class AdminUsersComponent implements OnInit {
   initials(user: UserSummary): string { return `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase(); }
   identity(user: UserSummary): string { return user.studentNumber || user.employeeNumber || '—'; }
   enabledCount(): number { return this.page().content.filter(user => user.enabled).length; }
-  roleCount(role: Role): number { return this.page().content.filter(user => user.roles.includes(role)).length; }
+  userRole(user: UserSummary): Role | null { return this.auth.roleOf(user); }
+  roleCount(role: Role): number { return this.page().content.filter(user => this.userRole(user) === role).length; }
 
   private showToast(message: string): void { this.toast.set(message); window.setTimeout(() => this.toast.set(''), 2800); }
   private message(error: any, fallback: string): string { return error.status === 0 ? 'Cannot reach the Smart Attendance API. Please check your connection.' : (error.error?.message || error.error?.detail || fallback); }

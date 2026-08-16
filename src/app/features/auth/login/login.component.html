@@ -21,6 +21,7 @@
         <div class="options"><label class="remember"><input type="checkbox"> Remember me</label><button type="button">Forgot password?</button></div>
         <button class="submit" [disabled]="loading()">{{ loading() ? 'Signing in…' : 'Sign in' }} <sam-icon name="arrow" size="18"/></button>
       </form>
+      <p class="register-prompt">New to Smart Attendance? <a routerLink="/register">Create an account</a></p>
       <div class="divider"><span>or preview the interface</span></div>
       <div class="preview-buttons"><button (click)="preview('ADMIN')"><sam-icon name="settings" size="18"/>Admin preview</button><button (click)="preview('TEACHER')"><sam-icon name="teacher" size="18"/>Teacher preview</button><button (click)="preview('STUDENT')"><sam-icon name="user" size="18"/>Student preview</button></div>
       <small class="preview-note">Preview mode uses sample data and does not call your backend.</small>
