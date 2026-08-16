@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AdminDashboardResponse, AdminDashboardView, PageResponse, TeacherDashboard, UserSummary } from '../models/api.models';
+import { AdminDashboardResponse, AdminDashboardView, PageResponse, StudentDashboard, TeacherDashboard, UserSummary } from '../models/api.models';
 import { AuthService } from './auth.service';
 
 export const PREVIEW_DASHBOARD: AdminDashboardView = {
@@ -58,5 +58,23 @@ export class DashboardService {
   getTeacherDashboard(): Observable<TeacherDashboard> {
     if (this.auth.isPreview()) return of({ teacherId:'preview-teacher', teacherName:'John Smith', myCourses:[{courseId:'c1',courseCode:'CSE-2103',courseName:'Programming Fundamentals',enrolledStudents:52}], todaySessions:PREVIEW_DASHBOARD.recentSessions.slice(0,2), attendanceRecords:182, expectedAttendance:195, attendanceRate:93.3 });
     return this.http.get<TeacherDashboard>(`${environment.apiUrl}/dashboard/teacher`);
+  }
+
+  getStudentDashboard(date: string): Observable<StudentDashboard> {
+    if (this.auth.isPreview()) return of({
+      overallAttendancePercentage:94,
+      currentMonthPercentage:96,
+      previousMonthPercentage:93.6,
+      monthlyChange:2.4,
+      classesAttended:47,
+      eligibleSessions:50,
+      presentCount:47,
+      absentCount:3,
+      todaySessionCount:2,
+      activeCourseCount:4,
+      requiredAttendancePercentage:75,
+      todaySessions:PREVIEW_DASHBOARD.recentSessions.slice(0,2),
+    });
+    return this.http.get<StudentDashboard>(`${environment.apiUrl}/dashboard/student`, { params: { date } });
   }
 }

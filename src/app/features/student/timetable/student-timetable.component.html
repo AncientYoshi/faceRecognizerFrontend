@@ -1,1 +1,65 @@
-<div class="page"><header><div><p>My schedule</p><h1>Weekly Timetable</h1><span>{{timetable()?.weekStart|date:'MMM d'}} – {{timetable()?.weekEnd|date:'MMM d, y'}} · {{timetable()?.timeZone}}</span></div><div class="week"><button (click)="move(-7)">‹</button><input type="date" [value]="week()" (change)="choose($any($event.target).value)"><button (click)="move(7)">›</button></div></header>@if(error()){<div class="error"><sam-icon name="info"/>{{error()}}<button (click)="load()">Retry</button></div>}<section class="schedule">@for(e of timetable()?.entries||[];track e.timetableId){<article [class.today]="e.today"><div class="date"><strong>{{e.date|date:'EEE'}}</strong><span>{{e.date|date:'d'}}</span></div><div class="course"><small>{{e.courseCode}}</small><h2>{{e.courseName}}</h2><p>{{e.teacherName}} · {{e.semester}} {{e.academicYear}}</p></div><div class="meta"><span><sam-icon name="clock" size="18"/>{{e.startTime.slice(0,5)}} – {{e.endTime.slice(0,5)}}</span><span><sam-icon name="building" size="18"/>{{e.room||'Room TBA'}}</span></div></article>}@if(!loading()&&!(timetable()?.entries?.length)){<div class="empty"><sam-icon name="calendar" size="54"/><h2>No classes this week</h2><p>Your enrolled courses have no active timetable entries for this week.</p></div>}</section></div>
+<div class="page">
+  <header class="page-header">
+    <div class="heading">
+      <p>My schedule</p>
+      <h1>Weekly Timetable</h1>
+      <span>{{timetable()?.weekStart|date:'MMM d'}} – {{timetable()?.weekEnd|date:'MMM d, y'}} · {{timetable()?.timeZone||'Asia/Yangon'}}</span>
+    </div>
+
+    <div class="week-actions">
+      <button class="today-button" type="button" (click)="currentWeek()">Today</button>
+      <div class="week-picker">
+        <button type="button" aria-label="Previous week" title="Previous week" (click)="move(-7)">‹</button>
+        <label>
+          <span>Week of</span>
+          <input type="date" [value]="week()" (change)="choose($any($event.target).value)" aria-label="Choose week">
+        </label>
+        <button type="button" aria-label="Next week" title="Next week" (click)="move(7)">›</button>
+      </div>
+    </div>
+  </header>
+
+  @if(error()){
+    <div class="error"><sam-icon name="info"/>{{error()}}<button type="button" (click)="load()">Retry</button></div>
+  }
+
+  <section class="timetable-card" [class.is-loading]="loading()" aria-live="polite">
+    <div class="card-heading">
+      <div>
+        <h2>Classes this week</h2>
+        <p>{{entryCount()}} {{entryCount()===1?'class':'classes'}} scheduled</p>
+      </div>
+      @if(loading()){<span class="loading-label">Loading schedule…</span>}
+    </div>
+
+    <div class="week-grid">
+      @for(day of days();track day.date){
+        <section class="day-column" [class.today]="day.today">
+          <header>
+            <span>{{day.date|date:'EEE'}}</span>
+            <strong>{{day.date|date:'d'}}</strong>
+            @if(day.today){<small>Today</small>}
+          </header>
+
+          <div class="day-classes">
+            @for(entry of day.entries;track trackEntry($index,entry)){
+              <article class="class-card">
+                <div class="class-time"><sam-icon name="clock" size="17"/>{{entry.startTime.slice(0,5)}} – {{entry.endTime.slice(0,5)}}</div>
+                <small>{{entry.courseCode}}</small>
+                <h3>{{entry.courseName}}</h3>
+                <p><sam-icon name="user" size="16"/>{{entry.teacherName}}</p>
+                <p><sam-icon name="building" size="16"/>{{entry.room||'Room TBA'}}</p>
+                <span class="term">{{entry.semester}} · {{entry.academicYear}}</span>
+              </article>
+            }
+            @if(!loading()&&!day.entries.length){<span class="no-class">No classes</span>}
+          </div>
+        </section>
+      }
+    </div>
+
+    @if(!loading()&&!entryCount()){
+      <div class="empty-note"><sam-icon name="info" size="20"/><span><strong>No timetable entries for this week.</strong> Ask your administrator to add an active timetable for your enrolled courses.</span></div>
+    }
+  </section>
+</div>

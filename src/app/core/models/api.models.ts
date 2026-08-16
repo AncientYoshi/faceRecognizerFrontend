@@ -192,6 +192,20 @@ export interface TeacherDashboard {
   todaySessions:AttendanceSession[]; attendanceRecords:number;
   expectedAttendance:number; attendanceRate:number;
 }
+export interface StudentDashboard {
+  overallAttendancePercentage:number;
+  currentMonthPercentage:number;
+  previousMonthPercentage:number;
+  monthlyChange:number;
+  classesAttended:number;
+  eligibleSessions:number;
+  presentCount:number;
+  absentCount:number;
+  todaySessionCount:number;
+  activeCourseCount:number;
+  requiredAttendancePercentage:number;
+  todaySessions:AttendanceSession[];
+}
 export interface FaceRegistration { id:string; studentId:string; studentNumber:string; embeddingId:string; registeredAt:string; updatedAt:string; }
 
 export interface ProfileAssignment {
