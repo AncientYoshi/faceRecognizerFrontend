@@ -304,6 +304,147 @@ td small {
 .report-pager button:disabled {
   opacity: 0.45;
 }
+.attendance-register {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #d7dee7;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(20, 45, 81, 0.05);
+}
+.register-heading {
+  padding: 22px 18px 18px;
+  text-align: center;
+  border-bottom: 1px solid #d7dee7;
+}
+.register-heading h2 {
+  margin: 0 0 5px;
+  color: #111827;
+  font-size: 22px;
+}
+.register-heading > strong {
+  display: block;
+  font-size: 16px;
+}
+.attendance-page .register-heading p {
+  margin: 6px 0 0;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.register-heading p span {
+  margin: 0 10px;
+}
+.register-scroll {
+  overflow: auto;
+  max-height: 64vh;
+}
+.register-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.register-table th,
+.register-table td {
+  height: 48px;
+  padding: 8px 10px;
+  border-right: 1px solid #29313b;
+  border-bottom: 1px solid #29313b;
+  color: #121820;
+  text-align: center;
+  white-space: nowrap;
+}
+.register-table th {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  background: #c7c9cc;
+  color: #111;
+  font-size: 13px;
+  font-weight: 800;
+}
+.register-table tr > :first-child {
+  border-left: 1px solid #29313b;
+}
+.register-table thead tr:first-child th {
+  border-top: 1px solid #29313b;
+}
+.register-table .number-column {
+  position: sticky;
+  z-index: 2;
+  left: 0;
+  width: 64px;
+  min-width: 64px;
+  background: #fff;
+}
+.register-table th.number-column {
+  z-index: 5;
+  background: #c7c9cc;
+}
+.register-table .roll-column {
+  position: sticky;
+  z-index: 2;
+  left: 64px;
+  width: 130px;
+  min-width: 130px;
+  background: #fff;
+  text-align: left;
+}
+.register-table th.roll-column {
+  z-index: 5;
+  background: #c7c9cc;
+  text-align: center;
+}
+.register-table .student-column {
+  position: sticky;
+  z-index: 2;
+  left: 194px;
+  width: 230px;
+  min-width: 230px;
+  background: #fff;
+  text-align: left;
+  box-shadow: 4px 0 7px rgba(20, 30, 42, 0.08);
+}
+.register-table th.student-column {
+  z-index: 5;
+  background: #c7c9cc;
+  text-align: center;
+}
+.call-column {
+  width: 72px;
+  min-width: 72px;
+}
+.call-column span,
+.call-column small {
+  display: block;
+}
+.call-column small {
+  margin-top: 3px;
+  color: inherit;
+}
+.attendance-cell {
+  width: 72px;
+  min-width: 72px;
+  font-weight: 900;
+}
+.attendance-cell.is-present {
+  background: #c6f6c9;
+  color: #155d2e;
+}
+.attendance-cell.is-absent {
+  background: #f59ac7;
+  color: #7a173d;
+}
+.summary-cell {
+  min-width: 90px;
+  font-weight: 700;
+}
+.percentage-summary {
+  min-width: 130px;
+  font-weight: 800;
+}
 .analytics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -437,6 +578,14 @@ td small {
   }
   .attendance-page header span {
     display: none;
+  }
+  .register-heading p span {
+    display: block;
+    margin: 3px 0;
+  }
+  .register-table .student-column {
+    width: 185px;
+    min-width: 185px;
   }
   .filters label {
     width: 100%;

@@ -29,6 +29,7 @@ export class AdminPeopleComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.minLength(8)],
     reference: ['', Validators.required],
+    studyYear: [1, [Validators.required, Validators.min(1), Validators.max(6)]],
     enabled: [true],
   });
   ngOnInit() {
@@ -58,6 +59,7 @@ export class AdminPeopleComponent implements OnInit {
       email: user?.email || '',
       password: '',
       reference: (this.role === 'TEACHER' ? user?.employeeNumber : user?.studentNumber) || '',
+      studyYear: user?.studyYear || 1,
       enabled: user?.enabled ?? true,
     });
     this.form.controls.password.setValidators(
@@ -78,6 +80,7 @@ export class AdminPeopleComponent implements OnInit {
       lastName: v.lastName,
       roles: [this.role],
       studentNumber: this.role === 'STUDENT' ? v.reference : null,
+      studyYear: this.role === 'STUDENT' ? Number(v.studyYear) : null,
       employeeNumber: this.role === 'TEACHER' ? v.reference : null,
     };
     const req = this.editing()

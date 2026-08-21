@@ -21,13 +21,14 @@ export class LoginComponent {
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
+    rememberMe: [false],
   });
 
   submit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true); this.error.set('');
-    const { email, password } = this.form.getRawValue();
-    this.auth.login(email, password).subscribe({
+    const { email, password, rememberMe } = this.form.getRawValue();
+    this.auth.login(email, password, rememberMe).subscribe({
       next: user => {
         this.loading.set(false);
         this.router.navigateByUrl(this.auth.homeFor(this.auth.roleOf(user)));

@@ -155,7 +155,8 @@
   font-weight: 700;
   margin-bottom: 13px;
 }
-.modal input {
+.modal input,
+.modal select {
   display: block;
   width: 100%;
   height: 42px;

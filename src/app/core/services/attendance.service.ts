@@ -6,10 +6,10 @@ import { AttendanceRecord, AttendanceSession, AttendanceVerification, PageRespon
 import { AuthService } from './auth.service';
 
 export const PREVIEW_SESSIONS: AttendanceSession[] = [
-  { id: 'robotics', courseId: '1', courseCode: 'ME 51021', courseName: 'Robotic Analysis', teacherId: '1', teacherUserId: '1', teacherName: 'Daw Aye', sessionDate: '2026-08-04', startTime: '2026-08-04T10:00:00+06:30', endTime: '2026-08-04T12:00:00+06:30', status: 'ACTIVE', createdAt: '', updatedAt: '' },
-  { id: 'structural', courseId: '2', courseCode: 'CE 4102', courseName: 'Structural Design', teacherId: '2', teacherUserId: '2', teacherName: 'Mg Mg', sessionDate: '2026-08-04', startTime: '2026-08-04T13:00:00+06:30', endTime: '2026-08-04T15:00:00+06:30', status: 'SCHEDULED', createdAt: '', updatedAt: '' },
-  { id: 'programming', courseId: '3', courseCode: 'CSE 2103', courseName: 'Programming Fundamentals', teacherId: '3', teacherUserId: '3', teacherName: 'Hsu Hlaing', sessionDate: '2026-08-04', startTime: '2026-08-04T15:30:00+06:30', endTime: '2026-08-04T17:30:00+06:30', status: 'SCHEDULED', createdAt: '', updatedAt: '' },
-  { id: 'electronics', courseId: '4', courseCode: 'ECE 3101', courseName: 'Digital Electronics', teacherId: '4', teacherUserId: '4', teacherName: 'Khin Thandar', sessionDate: '2026-08-04', startTime: '2026-08-04T09:00:00+06:30', endTime: '2026-08-04T11:00:00+06:30', status: 'CLOSED', createdAt: '', updatedAt: '' },
+  { id: 'robotics', courseId: '1', courseCode: 'ME 51021', courseName: 'Robotic Analysis', teacherId: '1', teacherUserId: '1', teacherName: 'Daw Aye', sessionDate: '2026-08-04', startTime: '2026-08-04T10:00:00+06:30', endTime: '2026-08-04T12:00:00+06:30', rollCallCount: 1, status: 'ACTIVE', createdAt: '', updatedAt: '' },
+  { id: 'structural', courseId: '2', courseCode: 'CE 4102', courseName: 'Structural Design', teacherId: '2', teacherUserId: '2', teacherName: 'Mg Mg', sessionDate: '2026-08-04', startTime: '2026-08-04T13:00:00+06:30', endTime: '2026-08-04T15:00:00+06:30', rollCallCount: 1, status: 'SCHEDULED', createdAt: '', updatedAt: '' },
+  { id: 'programming', courseId: '3', courseCode: 'CSE 2103', courseName: 'Programming Fundamentals', teacherId: '3', teacherUserId: '3', teacherName: 'Hsu Hlaing', sessionDate: '2026-08-04', startTime: '2026-08-04T15:30:00+06:30', endTime: '2026-08-04T17:30:00+06:30', rollCallCount: 1, status: 'SCHEDULED', createdAt: '', updatedAt: '' },
+  { id: 'electronics', courseId: '4', courseCode: 'ECE 3101', courseName: 'Digital Electronics', teacherId: '4', teacherUserId: '4', teacherName: 'Khin Thandar', sessionDate: '2026-08-04', startTime: '2026-08-04T09:00:00+06:30', endTime: '2026-08-04T11:00:00+06:30', rollCallCount: 1, status: 'CLOSED', createdAt: '', updatedAt: '' },
 ];
 
 @Injectable({ providedIn: 'root' })

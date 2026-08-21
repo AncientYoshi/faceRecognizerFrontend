@@ -28,8 +28,12 @@
       <a routerLink="/admin/timetables" routerLinkActive="active"><sam-icon name="calendar" />Timetables</a>
       <p>Attendance</p>
       <a routerLink="/admin/sessions" routerLinkActive="active"><sam-icon name="calendar" />Attendance Sessions</a>
-      <a routerLink="/admin/records" routerLinkActive="active"><sam-icon name="calendar" />Attendance Records</a>
-      <a routerLink="/admin/reports" routerLinkActive="active"><sam-icon name="report" />Reports</a>
+      @if (auth.hasRole('TEACHER')) {
+        <a routerLink="/admin/reports" routerLinkActive="active"><sam-icon name="report" />Attendance Records</a>
+      } @else {
+        <a routerLink="/admin/records" routerLinkActive="active"><sam-icon name="calendar" />Attendance Records</a>
+        <a routerLink="/admin/reports" routerLinkActive="active"><sam-icon name="report" />Reports</a>
+      }
       @if (auth.hasRole('ADMIN')) {<a routerLink="/admin/analytics" routerLinkActive="active"><sam-icon name="chart" />Analytics</a>}
       @if (auth.hasRole('ADMIN')) {
         <p>System</p>

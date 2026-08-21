@@ -3,7 +3,7 @@
     <div>
       <p>Attendance management</p>
       <h1>{{ title }}</h1>
-      <span>Live data from your Spring Boot attendance services.</span>
+      <span>{{ mode === 'reports' && auth.hasRole('TEACHER') ? 'Review attendance by course, study year, and reporting period.' : 'Live data from your Spring Boot attendance services.' }}</span>
     </div>
     @if (mode === 'sessions') {
       <button (click)="open()"><sam-icon name="plus" />Create session</button>
@@ -18,8 +18,8 @@
   @if (mode !== 'analytics') {
     <form class="filters" [formGroup]="filter" (ngSubmit)="load()">
       <label
-        >Course<select formControlName="courseId">
-          <option value="">All courses</option>
+        >Course<select formControlName="courseId" (change)="selectCourse($any($event.target).value)">
+          @if (!(mode === 'reports' && auth.hasRole('TEACHER'))) {<option value="">All courses</option>}
           @for (c of courses(); track c.id) {
             <option [value]="c.id">{{ c.code }} — {{ c.name }}</option>
           }
@@ -58,6 +58,14 @@
           <label
             >Reference date<input type="date" formControlName="referenceDate"
           /></label>
+          <label
+            >Study year<select formControlName="studyYear">
+              <option value="">All years</option>
+              @for (year of [1, 2, 3, 4, 5, 6]; track year) {
+                <option [value]="year">{{ studyYearLabel(year) }}</option>
+              }
+            </select></label
+          >
           <label
             >Student search<input
               type="search"
@@ -98,27 +106,6 @@
       </article>
       <article>
         <small>Generated</small><strong>{{ report()!.generatedAt | date: 'MMM d, h:mm a' }}</strong>
-      </article>
-    </section>
-  }
-  @if (mode === 'reports' && auth.hasRole('TEACHER') && percentageReport()) {
-    <section class="report-stats percentage-stats">
-      <article>
-        <small>Report period</small><strong>{{ percentageReport()!.period }}</strong>
-      </article>
-      <article>
-        <small>Date range</small
-        ><strong
-          >{{ percentageReport()!.from | date: 'MMM d' }} –
-          {{ percentageReport()!.to | date: 'MMM d, y' }}</strong
-        >
-      </article>
-      <article>
-        <small>Students</small><strong>{{ percentageReport()!.students.totalElements }}</strong>
-      </article>
-      <article>
-        <small>Generated</small
-        ><strong>{{ percentageReport()!.generatedAt | date: 'MMM d, h:mm a' }}</strong>
       </article>
     </section>
   }
@@ -194,39 +181,48 @@
     </section>
   }
   @if (mode === 'reports' && auth.hasRole('TEACHER')) {
-    <section class="table-card percentage-table">
-      <div class="table-scroll">
-        <table>
+    @if (percentageReport(); as attendanceReport) {
+    <section class="attendance-register">
+      <header class="register-heading">
+        <h2>Technological University (Hmawbi)</h2>
+        <strong>Attendance Record ({{ selectedCourseInfo()?.academicYear || (attendanceReport.referenceDate | date: 'y') }})</strong>
+        <p>
+          <span>Department: <b>{{ selectedCourseInfo()?.departmentName || '—' }}</b></span>
+          <span>Study Year: <b>{{ studyYearLabel(filter.controls.studyYear.value || percentageRows()[0]?.studyYear) }}</b></span>
+          <span>Course: <b>{{ selectedCourseInfo()?.code || percentageRows()[0]?.courseCode }} - {{ selectedCourseInfo()?.name || percentageRows()[0]?.courseName }}</b></span>
+        </p>
+        <p>
+          <span>Period: <b>{{ attendanceReport.from | date: 'yyyy-MM-dd' }} to {{ attendanceReport.to | date: 'yyyy-MM-dd' }}</b></span>
+          <span>Total roll calls: <b>{{ rollCallColumns().length }}</b></span>
+        </p>
+      </header>
+      <div class="register-scroll">
+        <table class="register-table">
           <thead>
             <tr>
-              <th>Student</th>
-              <th>Course</th>
-              <th>Total sessions</th>
-              <th>Present</th>
+              <th class="number-column">No.</th>
+              <th class="roll-column">Roll No.</th>
+              <th class="student-column">Student Name</th>
+              @for (column of rollCallColumns(); track column.sessionId + '-' + column.callNumber) {
+                <th class="call-column"><span>{{ column.sessionDate | date: 'dd/MM' }}</span><small>#{{ column.callNumber }}</small></th>
+              }
               <th>Absent</th>
+              <th>Present</th>
               <th>Attendance</th>
             </tr>
           </thead>
           <tbody>
-            @for (student of percentageRows(); track student.studentId + student.courseId) {
+            @for (student of percentageRows(); track student.studentId + student.courseId; let number = $index) {
               <tr>
-                <td>
-                  <strong>{{ student.studentName }}</strong
-                  ><small>{{ student.studentNumber }}</small>
-                </td>
-                <td>
-                  <strong>{{ student.courseName }}</strong
-                  ><small>{{ student.courseCode }}</small>
-                </td>
-                <td>{{ student.totalSessions }}</td>
-                <td><span class="present-count">{{ student.presentSessions }}</span></td>
-                <td><span class="absent-count">{{ student.absentSessions }}</span></td>
-                <td>
-                  <div class="percentage-cell">
-                    <strong>{{ student.attendancePercentage | number: '1.1-2' }}%</strong>
-                    <span><i [style.width.%]="student.attendancePercentage"></i></span>
-                  </div>
-                </td>
+                <td class="number-column">{{ attendanceReport.students.page * attendanceReport.students.size + number + 1 }}</td>
+                <td class="roll-column">{{ student.studentNumber }}</td>
+                <td class="student-column">{{ student.studentName }}</td>
+                @for (column of rollCallColumns(); track column.sessionId + '-' + column.callNumber) {
+                  <td class="attendance-cell" [class.is-present]="attendanceMark(student.studentId, column) === 'P'" [class.is-absent]="attendanceMark(student.studentId, column) === 'A'">{{ attendanceMark(student.studentId, column) }}</td>
+                }
+                <td class="summary-cell">{{ student.absentSessions }}</td>
+                <td class="summary-cell">{{ student.presentSessions }}</td>
+                <td class="percentage-summary">{{ student.attendancePercentage | number: '1.2-2' }}%</td>
               </tr>
             }
           </tbody>
@@ -235,21 +231,20 @@
       @if (!loading() && !percentageRows().length) {
         <div class="empty">No enrolled students match these report filters.</div>
       }
-      @if (percentageReport()) {
-        <footer class="report-pager">
-          <button [disabled]="percentageReport()!.students.first" (click)="movePercentage(-1)">
+      <footer class="report-pager">
+          <button [disabled]="attendanceReport.students.first" (click)="movePercentage(-1)">
             Previous
           </button>
           <span
-            >Page {{ percentageReport()!.students.page + 1 }} of
-            {{ percentageReport()!.students.totalPages || 1 }}</span
+            >Page {{ attendanceReport.students.page + 1 }} of
+            {{ attendanceReport.students.totalPages || 1 }} · {{ attendanceReport.students.totalElements }} students</span
           >
-          <button [disabled]="percentageReport()!.students.last" (click)="movePercentage(1)">
+          <button [disabled]="attendanceReport.students.last" (click)="movePercentage(1)">
             Next
           </button>
-        </footer>
-      }
+      </footer>
     </section>
+    }
   }
   @if (mode === 'analytics') {
     <section class="analytics-stats">
@@ -299,7 +294,7 @@
     <section class="modal">
       <header>
         <h2>{{ editing() ? 'Edit' : 'Create' }} session</h2>
-        <button (click)="modal.set(false)"><sam-icon name="x" /></button>
+        <button (click)="modal.set(false)" [disabled]="saving()"><sam-icon name="x" /></button>
       </header>
       <form [formGroup]="sessionForm" (ngSubmit)="save()">
         <label
@@ -313,9 +308,10 @@
           <label>Start time<input type="datetime-local" formControlName="startTime" /></label
           ><label>End time<input type="datetime-local" formControlName="endTime" /></label>
         </div>
+        <label>Roll calls<input type="number" min="1" max="6" formControlName="rollCallCount" /></label>
         <footer>
-          <button type="button" (click)="modal.set(false)">Cancel</button
-          ><button class="save">Save session</button>
+          <button type="button" (click)="modal.set(false)" [disabled]="saving()">Cancel</button
+          ><button class="save" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save session' }}</button>
         </footer>
       </form>
     </section>

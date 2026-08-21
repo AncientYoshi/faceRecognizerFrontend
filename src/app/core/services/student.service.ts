@@ -9,6 +9,7 @@ const PREVIEW_PROFILE: StudentProfile = {
   studentId: 'preview-student',
   userId: 'preview-student-user',
   studentNumber: 'STU-24018',
+  studyYear: 2,
   email: 'student@sam.edu',
   firstName: 'Mia',
   lastName: 'Anderson',
@@ -20,10 +21,10 @@ const PREVIEW_PROFILE: StudentProfile = {
 };
 
 const PREVIEW_COURSES: Course[] = [
-  { id: '1', code: 'ME 51021', name: 'Robotic Analysis', semester: 'FIRST', academicYear: '2026-2027', departmentId: 'me', departmentCode: 'ME', departmentName: 'Mechanical Engineering', teacherId: '1', teacherUserId: '1', teacherName: 'Daw Aye', enrollmentCount: 34, createdAt: '', updatedAt: '' },
-  { id: '2', code: 'CE 4102', name: 'Structural Design', semester: 'FIRST', academicYear: '2026-2027', departmentId: 'ce', departmentCode: 'CE', departmentName: 'Civil Engineering', teacherId: '2', teacherUserId: '2', teacherName: 'Mg Mg', enrollmentCount: 41, createdAt: '', updatedAt: '' },
-  { id: '3', code: 'CSE 2103', name: 'Programming Fundamentals', semester: 'FIRST', academicYear: '2026-2027', departmentId: 'cse', departmentCode: 'CSE', departmentName: 'Computer Science and Engineering', teacherId: '3', teacherUserId: '3', teacherName: 'Hsu Hlaing', enrollmentCount: 52, createdAt: '', updatedAt: '' },
-  { id: '4', code: 'ECE 3101', name: 'Digital Electronics', semester: 'FIRST', academicYear: '2026-2027', departmentId: 'ece', departmentCode: 'ECE', departmentName: 'Electronic Engineering', teacherId: '4', teacherUserId: '4', teacherName: 'Khin Thandar', enrollmentCount: 38, createdAt: '', updatedAt: '' },
+  { id: '1', code: 'ME 51021', name: 'Robotic Analysis', semester: 'FIRST', academicYear: '2026-2027', studyYear: 5, departmentId: 'me', departmentCode: 'ME', departmentName: 'Mechanical Engineering', teacherId: '1', teacherUserId: '1', teacherName: 'Daw Aye', enrollmentCount: 34, createdAt: '', updatedAt: '' },
+  { id: '2', code: 'CE 4102', name: 'Structural Design', semester: 'FIRST', academicYear: '2026-2027', studyYear: 4, departmentId: 'ce', departmentCode: 'CE', departmentName: 'Civil Engineering', teacherId: '2', teacherUserId: '2', teacherName: 'Mg Mg', enrollmentCount: 41, createdAt: '', updatedAt: '' },
+  { id: '3', code: 'CSE 2103', name: 'Programming Fundamentals', semester: 'FIRST', academicYear: '2026-2027', studyYear: 2, departmentId: 'cse', departmentCode: 'CSE', departmentName: 'Computer Science and Engineering', teacherId: '3', teacherUserId: '3', teacherName: 'Hsu Hlaing', enrollmentCount: 52, createdAt: '', updatedAt: '' },
+  { id: '4', code: 'ECE 3101', name: 'Digital Electronics', semester: 'FIRST', academicYear: '2026-2027', studyYear: 3, departmentId: 'ece', departmentCode: 'ECE', departmentName: 'Electronic Engineering', teacherId: '4', teacherUserId: '4', teacherName: 'Khin Thandar', enrollmentCount: 38, createdAt: '', updatedAt: '' },
 ];
 
 @Injectable({ providedIn: 'root' })

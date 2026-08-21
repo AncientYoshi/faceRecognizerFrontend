@@ -29,6 +29,7 @@ export class RegisterComponent implements OnInit {
     lastName: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(320)]],
     referenceNumber: ['', [Validators.required, Validators.maxLength(80)]],
+    studyYear: [1, [Validators.required, Validators.min(1), Validators.max(6)]],
     departmentId: ['', Validators.required],
     password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(200)]],
     confirmPassword: ['', Validators.required],
@@ -58,6 +59,7 @@ export class RegisterComponent implements OnInit {
     this.form.controls.role.setValue(role);
     this.form.controls.referenceNumber.setValue('');
     this.form.controls.referenceNumber.markAsUntouched();
+    this.form.controls.studyYear.setValue(1);
   }
 
   submit(): void {
@@ -84,6 +86,7 @@ export class RegisterComponent implements OnInit {
       lastName: value.lastName.trim(),
       role: value.role,
       studentNumber: value.role === 'STUDENT' ? referenceNumber : null,
+      studyYear: value.role === 'STUDENT' ? Number(value.studyYear) : null,
       employeeNumber: value.role === 'TEACHER' ? referenceNumber : null,
       departmentId: value.departmentId,
     }).subscribe({

@@ -41,6 +41,7 @@ export class AdminUsersComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     studentNumber: [''],
+    studyYear: [1, [Validators.required, Validators.min(1), Validators.max(6)]],
     employeeNumber: [''],
     enabled: [true],
   });
@@ -71,7 +72,7 @@ export class AdminUsersComponent implements OnInit {
     this.error.set('');
     this.editingUser.set(null);
     this.selectedRole.set('STUDENT');
-    this.form.reset({ firstName: '', lastName: '', email: '', password: '', studentNumber: '', employeeNumber: '', enabled: true });
+    this.form.reset({ firstName: '', lastName: '', email: '', password: '', studentNumber: '', studyYear: 1, employeeNumber: '', enabled: true });
     this.form.controls.password.setValidators([Validators.required, Validators.minLength(8)]);
     this.form.controls.password.updateValueAndValidity();
     this.modalOpen.set(true);
@@ -81,7 +82,7 @@ export class AdminUsersComponent implements OnInit {
     this.error.set('');
     this.editingUser.set(user);
     this.selectedRole.set(this.auth.roleOf(user));
-    this.form.reset({ firstName: user.firstName, lastName: user.lastName, email: user.email, password: '', studentNumber: user.studentNumber ?? '', employeeNumber: user.employeeNumber ?? '', enabled: user.enabled });
+    this.form.reset({ firstName: user.firstName, lastName: user.lastName, email: user.email, password: '', studentNumber: user.studentNumber ?? '', studyYear: user.studyYear ?? 1, employeeNumber: user.employeeNumber ?? '', enabled: user.enabled });
     this.form.controls.password.setValidators([Validators.minLength(8)]);
     this.form.controls.password.updateValueAndValidity();
     this.modalOpen.set(true);
@@ -101,7 +102,7 @@ export class AdminUsersComponent implements OnInit {
     this.deleteTarget.set(null);
   }
 
-  selectRole(role: Role): void { this.selectedRole.set(role); }
+  selectRole(role: Role): void { this.selectedRole.set(role); if (role !== 'STUDENT') this.form.controls.studyYear.setValue(1); }
 
   hasRole(role: Role): boolean { return this.selectedRole() === role; }
 
@@ -111,7 +112,7 @@ export class AdminUsersComponent implements OnInit {
     if (this.hasRole('STUDENT') && !value.studentNumber.trim()) { this.error.set('Roll number is required for the Student role.'); return; }
     if (this.hasRole('TEACHER') && !value.employeeNumber.trim()) { this.error.set('Employee number is required for the Teacher role.'); return; }
     this.saving.set(true); this.error.set('');
-    const common = { email: value.email.trim(), firstName: value.firstName.trim(), lastName: value.lastName.trim(), roles: [this.selectedRole()!], studentNumber: this.hasRole('STUDENT') ? value.studentNumber.trim() : null, employeeNumber: this.hasRole('TEACHER') ? value.employeeNumber.trim() : null };
+    const common = { email: value.email.trim(), firstName: value.firstName.trim(), lastName: value.lastName.trim(), roles: [this.selectedRole()!], studentNumber: this.hasRole('STUDENT') ? value.studentNumber.trim() : null, studyYear: this.hasRole('STUDENT') ? Number(value.studyYear) : null, employeeNumber: this.hasRole('TEACHER') ? value.employeeNumber.trim() : null };
     const request = this.isEdit()
       ? this.users.update(this.editingUser()!.id, { ...common, password: value.password || null, enabled: value.enabled } as UpdateUserPayload)
       : this.users.create({ ...common, password: value.password } as CreateUserPayload);

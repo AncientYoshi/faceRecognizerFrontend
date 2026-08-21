@@ -14,10 +14,10 @@ export const PREVIEW_DASHBOARD: AdminDashboardView = {
   expectedAttendance: 1163,
   attendanceRate: 92.4,
   recentSessions: [
-    { id: '1', courseId: '1', courseCode: 'CS501', courseName: 'Database Systems', teacherId: '1', teacherUserId: '1', teacherName: 'Dr. John Smith', sessionDate: '2026-08-04', startTime: '2026-08-04T10:00:00Z', endTime: '2026-08-04T11:30:00Z', status: 'ACTIVE', createdAt: '', updatedAt: '' },
-    { id: '2', courseId: '2', courseCode: 'CS502', courseName: 'Artificial Intelligence', teacherId: '2', teacherUserId: '2', teacherName: 'Dr. Emily Johnson', sessionDate: '2026-08-04', startTime: '2026-08-04T08:00:00Z', endTime: '2026-08-04T09:30:00Z', status: 'CLOSED', createdAt: '', updatedAt: '' },
-    { id: '3', courseId: '3', courseCode: 'CS503', courseName: 'Software Engineering', teacherId: '3', teacherUserId: '3', teacherName: 'Dr. Michael Brown', sessionDate: '2026-08-04', startTime: '2026-08-04T14:00:00Z', endTime: '2026-08-04T15:30:00Z', status: 'CLOSED', createdAt: '', updatedAt: '' },
-    { id: '4', courseId: '4', courseCode: 'CS504', courseName: 'Web Technologies', teacherId: '4', teacherUserId: '4', teacherName: 'Dr. Sarah Wilson', sessionDate: '2026-08-04', startTime: '2026-08-04T16:00:00Z', endTime: '2026-08-04T17:30:00Z', status: 'SCHEDULED', createdAt: '', updatedAt: '' },
+    { id: '1', courseId: '1', courseCode: 'CS501', courseName: 'Database Systems', teacherId: '1', teacherUserId: '1', teacherName: 'Dr. John Smith', sessionDate: '2026-08-04', startTime: '2026-08-04T10:00:00Z', endTime: '2026-08-04T11:30:00Z', rollCallCount: 1, status: 'ACTIVE', createdAt: '', updatedAt: '' },
+    { id: '2', courseId: '2', courseCode: 'CS502', courseName: 'Artificial Intelligence', teacherId: '2', teacherUserId: '2', teacherName: 'Dr. Emily Johnson', sessionDate: '2026-08-04', startTime: '2026-08-04T08:00:00Z', endTime: '2026-08-04T09:30:00Z', rollCallCount: 1, status: 'CLOSED', createdAt: '', updatedAt: '' },
+    { id: '3', courseId: '3', courseCode: 'CS503', courseName: 'Software Engineering', teacherId: '3', teacherUserId: '3', teacherName: 'Dr. Michael Brown', sessionDate: '2026-08-04', startTime: '2026-08-04T14:00:00Z', endTime: '2026-08-04T15:30:00Z', rollCallCount: 1, status: 'CLOSED', createdAt: '', updatedAt: '' },
+    { id: '4', courseId: '4', courseCode: 'CS504', courseName: 'Web Technologies', teacherId: '4', teacherUserId: '4', teacherName: 'Dr. Sarah Wilson', sessionDate: '2026-08-04', startTime: '2026-08-04T16:00:00Z', endTime: '2026-08-04T17:30:00Z', rollCallCount: 1, status: 'SCHEDULED', createdAt: '', updatedAt: '' },
   ],
   departmentStatistics: [
     { departmentId: '1', departmentCode: 'CS', departmentName: 'Computer Science', students: 388, teachers: 24, courses: 16, attendanceRecords: 94 },

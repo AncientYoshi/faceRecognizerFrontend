@@ -18,7 +18,7 @@
       <form [formGroup]="form" (ngSubmit)="submit()">
         <label>Email address<input type="email" formControlName="email" placeholder="you@university.edu" autocomplete="email"></label>
         <label>Password<div class="password"><input [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="Enter your password" autocomplete="current-password"><button type="button" (click)="showPassword.set(!showPassword())">{{ showPassword() ? 'Hide' : 'Show' }}</button></div></label>
-        <div class="options"><label class="remember"><input type="checkbox"> Remember me</label><button type="button">Forgot password?</button></div>
+        <div class="options"><label class="remember"><input type="checkbox" formControlName="rememberMe"> Remember me</label><button type="button">Forgot password?</button></div>
         <button class="submit" [disabled]="loading()">{{ loading() ? 'Signing in…' : 'Sign in' }} <sam-icon name="arrow" size="18"/></button>
       </form>
       <p class="register-prompt">New to Smart Attendance? <a routerLink="/register">Create an account</a></p>

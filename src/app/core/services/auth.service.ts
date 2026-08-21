@@ -19,6 +19,7 @@ interface PublicDepartmentCache {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private authStorage = this.initialAuthStorage();
   private readonly _user = signal<CurrentUser | null>(this.readUser());
   private departmentCache = this.readDepartments();
   private departmentRefresh$: Observable<PublicDepartment[]> | null = null;
@@ -27,12 +28,12 @@ export class AuthService {
   readonly isAuthenticated = computed(() => !!this.accessToken && !!this._user());
   readonly primaryRole = computed<Role | null>(() => this.roleOf(this._user()));
 
-  get accessToken(): string | null { return localStorage.getItem(ACCESS_KEY); }
-  get refreshToken(): string | null { return localStorage.getItem(REFRESH_KEY); }
+  get accessToken(): string | null { return this.authStorage.getItem(ACCESS_KEY); }
+  get refreshToken(): string | null { return this.authStorage.getItem(REFRESH_KEY); }
 
-  login(email: string, password: string): Observable<CurrentUser> {
+  login(email: string, password: string, rememberMe = false): Observable<CurrentUser> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password }).pipe(
-      tap(tokens => this.storeTokens(tokens)),
+      tap(tokens => this.storeTokens(tokens, rememberMe)),
       switchMap(() => this.http.get<CurrentUser>(`${environment.apiUrl}/me`)),
       tap(user => this.storeUser(user)),
     );
@@ -66,7 +67,8 @@ export class AuthService {
       roles: [role],
       createdAt: new Date().toISOString(),
     };
-    localStorage.setItem(ACCESS_KEY, 'preview-token');
+    this.selectAuthStorage(true);
+    this.authStorage.setItem(ACCESS_KEY, 'preview-token');
     this.storeUser(user);
     const path = role === 'ADMIN' ? '/admin/dashboard' : role === 'TEACHER' ? '/admin/teacher-dashboard' : '/student/dashboard';
     this.router.navigateByUrl(path);
@@ -84,9 +86,8 @@ export class AuthService {
 
 
   expireSession(): void {
-    localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-    localStorage.removeItem(USER_KEY);
+    this.clearAuthStorage(localStorage);
+    this.clearAuthStorage(sessionStorage);
     this._user.set(null);
     this.router.navigateByUrl('/login');
   }
@@ -103,19 +104,36 @@ export class AuthService {
   hasRole(role: Role): boolean { return this.primaryRole() === role; }
   isPreview(): boolean { return this.accessToken === 'preview-token'; }
 
-  private storeTokens(tokens: AuthResponse): void {
-    localStorage.setItem(ACCESS_KEY, tokens.accessToken);
-    localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
+  private storeTokens(tokens: AuthResponse, rememberMe?: boolean): void {
+    if (rememberMe !== undefined) this.selectAuthStorage(rememberMe);
+    this.authStorage.setItem(ACCESS_KEY, tokens.accessToken);
+    this.authStorage.setItem(REFRESH_KEY, tokens.refreshToken);
   }
 
   private storeUser(user: CurrentUser): void {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    this.authStorage.setItem(USER_KEY, JSON.stringify(user));
     this._user.set(user);
   }
 
   private readUser(): CurrentUser | null {
-    try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); }
+    try { return JSON.parse(this.authStorage.getItem(USER_KEY) || 'null'); }
     catch { return null; }
+  }
+
+  private initialAuthStorage(): Storage {
+    return sessionStorage.getItem(ACCESS_KEY) ? sessionStorage : localStorage;
+  }
+
+  private selectAuthStorage(rememberMe: boolean): void {
+    this.clearAuthStorage(localStorage);
+    this.clearAuthStorage(sessionStorage);
+    this.authStorage = rememberMe ? localStorage : sessionStorage;
+  }
+
+  private clearAuthStorage(storage: Storage): void {
+    storage.removeItem(ACCESS_KEY);
+    storage.removeItem(REFRESH_KEY);
+    storage.removeItem(USER_KEY);
   }
 
   private refreshDepartments(): Observable<PublicDepartment[]> {

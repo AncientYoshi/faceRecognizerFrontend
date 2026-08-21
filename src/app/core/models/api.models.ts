@@ -31,6 +31,7 @@ export interface RegisterUserPayload {
   lastName: string;
   role: SelfRegistrationRole;
   studentNumber: string | null;
+  studyYear: number | null;
   employeeNumber: string | null;
   departmentId: string;
 }
@@ -43,6 +44,7 @@ export interface RegisterUserResponse {
   role: SelfRegistrationRole;
   studentId: string | null;
   studentNumber: string | null;
+  studyYear: number | null;
   teacherId: string | null;
   employeeNumber: string | null;
   departmentId: string;
@@ -55,6 +57,7 @@ export interface StudentProfile {
   studentId: string;
   userId: string;
   studentNumber: string;
+  studyYear: number;
   email: string;
   firstName: string;
   lastName: string;
@@ -71,6 +74,7 @@ export interface Course {
   name: string;
   semester: string;
   academicYear: string;
+  studyYear: number;
   departmentId: string;
   departmentCode: string;
   departmentName: string;
@@ -91,12 +95,12 @@ export interface Department {
 export interface Enrollment {
   id: string; courseId: string; courseCode: string; courseName: string;
   studentId: string; studentUserId: string; studentNumber: string;
-  studentName: string; enrolledAt: string;
+  studyYear: number; studentName: string; enrolledAt: string;
 }
 
 export interface CoursePayload {
   code: string; name: string; semester: string; academicYear: string;
-  departmentId: string; teacherId: string;
+  studyYear: number; departmentId: string; teacherId: string;
 }
 
 export interface PageResponse<T> {
@@ -120,6 +124,7 @@ export interface AttendanceSession {
   sessionDate: string;
   startTime: string;
   endTime: string;
+  rollCallCount: number;
   status: 'SCHEDULED' | 'ACTIVE' | 'CLOSED' | 'CANCELLED';
   createdAt: string;
   updatedAt: string;
@@ -169,7 +174,7 @@ export interface AttendanceVerification {
   message: string;
 }
 
-export interface SessionPayload { courseId: string; sessionDate: string; startTime: string; endTime: string; }
+export interface SessionPayload { courseId: string; sessionDate: string; startTime: string; endTime: string; rollCallCount: number; }
 export interface AttendanceReport {
   totalRecords: number; expectedAttendance: number; attendanceRate: number;
   generatedAt: string; records: PageResponse<AttendanceRecord>;
@@ -177,7 +182,7 @@ export interface AttendanceReport {
 
 export type AttendancePercentagePeriod = 'WEEK' | 'MONTH';
 export interface StudentAttendancePercentage {
-  studentId:string; studentUserId:string; studentNumber:string; studentName:string;
+  studentId:string; studentUserId:string; studentNumber:string; studyYear:number; studentName:string;
   courseId:string; courseCode:string; courseName:string; totalSessions:number;
   presentSessions:number; absentSessions:number; attendancePercentage:number;
 }
@@ -221,7 +226,7 @@ export interface AssignedTeacher {
 
 export interface AssignedStudent {
   studentId:string; userId:string; studentNumber:string; email:string;
-  firstName:string; lastName:string; fullName:string; departmentId:string;
+  studyYear:number; firstName:string; lastName:string; fullName:string; departmentId:string;
   departmentCode:string; departmentName:string;
 }
 
@@ -262,6 +267,7 @@ export interface UserSummary {
   roles: Role[];
   studentId?: string;
   studentNumber?: string;
+  studyYear?: number;
   teacherId?: string;
   employeeNumber?: string;
   createdAt: string;
@@ -280,6 +286,7 @@ export interface CreateUserPayload {
   lastName: string;
   roles: Role[];
   studentNumber: string | null;
+  studyYear: number | null;
   employeeNumber: string | null;
 }
 
