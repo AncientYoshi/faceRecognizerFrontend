@@ -30,6 +30,7 @@
       <a routerLink="/admin/sessions" routerLinkActive="active"><sam-icon name="calendar" />Attendance Sessions</a>
       @if (auth.hasRole('TEACHER')) {
         <a routerLink="/admin/reports" routerLinkActive="active"><sam-icon name="report" />Attendance Records</a>
+        <a routerLink="/admin/overall-attendance" routerLinkActive="active"><sam-icon name="chart" />Overall Attendance</a>
       } @else {
         <a routerLink="/admin/records" routerLinkActive="active"><sam-icon name="calendar" />Attendance Records</a>
         <a routerLink="/admin/reports" routerLinkActive="active"><sam-icon name="report" />Reports</a>

@@ -191,6 +191,18 @@ export interface StudentAttendancePercentageReport {
   generatedAt:string; students:PageResponse<StudentAttendancePercentage>;
 }
 
+export type StudentAttendancePeriod = 'ALL' | 'WEEK' | 'MONTH';
+export interface TeacherStudentOverallAttendance {
+  studentId:string; studentUserId:string; studentNumber:string; studentName:string; email:string;
+  studyYear:number; courseCount:number; overallAttendancePercentage:number;
+  totalEligibleRollCalls:number; totalPresentRollCalls:number; totalAbsentRollCalls:number;
+}
+export interface TeacherCohortAttendanceReport {
+  teacherId:string; departmentId:string; departmentCode:string; departmentName:string;
+  studyYear:number; period:StudentAttendancePeriod; referenceDate:string; from:string; to:string;
+  generatedAt:string; calculationMethod:string; students:PageResponse<TeacherStudentOverallAttendance>;
+}
+
 export interface TeacherCourseSummary { courseId:string; courseCode:string; courseName:string; enrolledStudents:number; }
 export interface TeacherDashboard {
   teacherId:string; teacherName:string; myCourses:TeacherCourseSummary[];

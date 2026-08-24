@@ -22,6 +22,7 @@ export const routes: Routes = [
       { path: 'sessions', data: { mode: 'sessions' }, loadComponent: () => import('./features/admin/attendance/admin-attendance.component').then(m => m.AdminAttendanceComponent) },
       { path: 'records', data: { mode: 'records' }, loadComponent: () => import('./features/admin/attendance/admin-attendance.component').then(m => m.AdminAttendanceComponent) },
       { path: 'reports', data: { mode: 'reports' }, loadComponent: () => import('./features/admin/attendance/admin-attendance.component').then(m => m.AdminAttendanceComponent) },
+      { path: 'overall-attendance', canActivate:[roleGuard], data: { roles:['TEACHER'] }, loadComponent: () => import('./features/teacher/overall-attendance/teacher-overall-attendance.component').then(m => m.TeacherOverallAttendanceComponent) },
       { path: 'analytics', canActivate:[roleGuard], data: { roles:['ADMIN'],mode: 'analytics' }, loadComponent: () => import('./features/admin/attendance/admin-attendance.component').then(m => m.AdminAttendanceComponent) },
       { path: 'settings', canActivate:[roleGuard], data:{roles:['ADMIN'],mode:'settings'}, loadComponent:()=>import('./features/admin/system/admin-system.component').then(m=>m.AdminSystemComponent) },
       { path: 'audit', canActivate:[roleGuard], data:{roles:['ADMIN'],mode:'audit'}, loadComponent:()=>import('./features/admin/system/admin-system.component').then(m=>m.AdminSystemComponent) },

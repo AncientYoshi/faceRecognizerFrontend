@@ -1,0 +1,211 @@
+<div class="overall-page">
+  <header class="page-heading">
+    <div>
+      <p>Teacher report</p>
+      <h1>Overall Student Attendance</h1>
+      <span>Review each student's combined attendance across their enrolled courses.</span>
+    </div>
+  </header>
+
+  <form class="filters" [formGroup]="filter" (ngSubmit)="apply()">
+    <label
+      >Study year
+      <select formControlName="studyYear">
+        @for (year of years; track year) {
+          <option [value]="year">{{ yearLabel(year) }}</option>
+        }
+      </select>
+    </label>
+    <label
+      >Period
+      <select formControlName="period">
+        <option value="ALL">All time</option>
+        <option value="MONTH">Monthly</option>
+        <option value="WEEK">Weekly</option>
+      </select>
+    </label>
+    <label
+      >Reference date
+      <input type="date" formControlName="date" />
+    </label>
+    <label class="search-field"
+      >Student search
+      <span
+        ><sam-icon name="search" size="18" /><input
+          type="search"
+          formControlName="query"
+          placeholder="Name, roll number, or email"
+      /></span>
+    </label>
+    <button type="submit" [disabled]="loading()">
+      <sam-icon name="search" size="18" />Apply filters
+    </button>
+  </form>
+
+  @if (error()) {
+    <div class="error">
+      <sam-icon name="info" />{{ error() }}
+      <button type="button" (click)="load()">Try again</button>
+    </div>
+  }
+
+  @if (report(); as attendance) {
+    <section class="overview" aria-label="Report summary">
+      <article>
+        <span class="summary-icon department"><sam-icon name="building" /></span>
+        <div>
+          <small>Department</small><strong>{{ attendance.departmentName }}</strong
+          ><span>{{ attendance.departmentCode }}</span>
+        </div>
+      </article>
+      <article>
+        <span class="summary-icon year"><sam-icon name="users" /></span>
+        <div>
+          <small>Study year</small><strong>{{ yearLabel(attendance.studyYear) }}</strong
+          ><span>{{ attendance.students.totalElements }} students</span>
+        </div>
+      </article>
+      <article>
+        <span class="summary-icon period"><sam-icon name="calendar" /></span>
+        <div>
+          <small>Report period</small><strong>{{ periodLabel(attendance.period) }}</strong
+          ><span>{{ rangeLabel(attendance) }}</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="report-card">
+      <header>
+        <div>
+          <h2>{{ yearLabel(attendance.studyYear) }} students</h2>
+          <p>Attendance is averaged across each student's actual enrolled courses.</p>
+        </div>
+        <span class="generated"
+          >Updated {{ attendance.generatedAt | date: 'MMM d, y · h:mm a' }}</span
+        >
+      </header>
+
+      <div class="desktop-table">
+        <table>
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>Student</th>
+              <th>Roll No.</th>
+              <th>Courses</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Eligible</th>
+              <th>Attendance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (
+              student of attendance.students.content;
+              track trackStudent($index, student);
+              let index = $index
+            ) {
+              <tr>
+                <td>{{ attendance.students.page * attendance.students.size + index + 1 }}</td>
+                <td class="student">
+                  <strong>{{ student.studentName }}</strong
+                  ><small>{{ student.email }}</small>
+                </td>
+                <td class="roll">{{ student.studentNumber }}</td>
+                <td>{{ student.courseCount }}</td>
+                <td>
+                  <span class="count present">{{ student.totalPresentRollCalls }}</span>
+                </td>
+                <td>
+                  <span class="count absent">{{ student.totalAbsentRollCalls }}</span>
+                </td>
+                <td>{{ student.totalEligibleRollCalls }}</td>
+                <td class="rate-cell">
+                  <div>
+                    <strong class="rate {{ rateClass(student) }}"
+                      >{{ student.overallAttendancePercentage | number: '1.2-2' }}%</strong
+                    ><span
+                      ><i
+                        [class]="rateClass(student)"
+                        [style.width.%]="student.overallAttendancePercentage"
+                      ></i
+                    ></span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-list">
+        @for (
+          student of attendance.students.content;
+          track trackStudent($index, student);
+          let index = $index
+        ) {
+          <article class="student-card">
+            <header>
+              <span class="number">{{
+                attendance.students.page * attendance.students.size + index + 1
+              }}</span>
+              <div class="identity">
+                <strong>{{ student.studentName }}</strong
+                ><span>{{ student.studentNumber }} · {{ student.courseCount }} courses</span>
+              </div>
+              <strong class="rate {{ rateClass(student) }}"
+                >{{ student.overallAttendancePercentage | number: '1.2-2' }}%</strong
+              >
+            </header>
+            <div class="progress">
+              <i
+                [class]="rateClass(student)"
+                [style.width.%]="student.overallAttendancePercentage"
+              ></i>
+            </div>
+            <div class="mobile-counts">
+              <div>
+                <small>Present</small
+                ><strong class="present-text">{{ student.totalPresentRollCalls }}</strong>
+              </div>
+              <div>
+                <small>Absent</small
+                ><strong class="absent-text">{{ student.totalAbsentRollCalls }}</strong>
+              </div>
+              <div>
+                <small>Eligible</small><strong>{{ student.totalEligibleRollCalls }}</strong>
+              </div>
+            </div>
+            <a [href]="'mailto:' + student.email">{{ student.email }}</a>
+          </article>
+        }
+      </div>
+
+      @if (!loading() && !attendance.students.content.length) {
+        <div class="empty">
+          <sam-icon name="users" size="32" /><strong>No students found</strong
+          ><span>Try another study year, period, or search term.</span>
+        </div>
+      }
+
+      <footer class="pager">
+        <button
+          type="button"
+          [disabled]="attendance.students.first || loading()"
+          (click)="move(-1)"
+        >
+          Previous
+        </button>
+        <span
+          >Page {{ attendance.students.page + 1 }} of {{ attendance.students.totalPages || 1 }} ·
+          {{ attendance.students.totalElements }} students</span
+        >
+        <button type="button" [disabled]="attendance.students.last || loading()" (click)="move(1)">
+          Next
+        </button>
+      </footer>
+    </section>
+  } @else if (loading()) {
+    <div class="loading"><span></span>Loading overall attendance…</div>
+  }
+</div>
