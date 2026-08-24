@@ -445,6 +445,9 @@ td small {
   min-width: 130px;
   font-weight: 800;
 }
+.mobile-register-list {
+  display: none;
+}
 .analytics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -583,9 +586,127 @@ td small {
     display: block;
     margin: 3px 0;
   }
-  .register-table .student-column {
-    width: 185px;
-    min-width: 185px;
+  .register-scroll {
+    display: none;
+  }
+  .mobile-register-list {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+    background: #f4f7fa;
+  }
+  .mobile-student-card {
+    overflow: hidden;
+    border: 1px solid #d7dee7;
+    border-radius: 10px;
+    background: #fff;
+  }
+  .mobile-student-card > header {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 13px;
+    border-bottom: 1px solid #e3e8ee;
+  }
+  .mobile-student-number {
+    display: grid !important;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border-radius: 50%;
+    background: #eaf2ff;
+    color: #2672e5 !important;
+    font-size: 13px !important;
+    font-weight: 800;
+  }
+  .mobile-student-card header div {
+    min-width: 0;
+  }
+  .mobile-student-card header strong,
+  .mobile-student-card header small {
+    display: block;
+  }
+  .mobile-student-card header strong {
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-student-card header small {
+    margin-top: 3px;
+    color: #738196;
+    font-size: 12px;
+  }
+  .mobile-percentage {
+    padding: 7px 9px;
+    border-radius: 7px;
+    background: #e8f1ff;
+    color: #1f66cc;
+    font-size: 14px;
+  }
+  .mobile-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid #e3e8ee;
+  }
+  .mobile-summary > div {
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .mobile-summary > div + div {
+    border-left: 1px solid #e3e8ee;
+  }
+  .mobile-summary small,
+  .mobile-summary strong {
+    display: block;
+  }
+  .mobile-summary small {
+    color: #768599;
+    font-size: 10px;
+  }
+  .mobile-summary strong {
+    margin-top: 3px;
+    color: #263c57;
+    font-size: 16px;
+  }
+  .mobile-summary .mobile-present strong {
+    color: #138b62;
+  }
+  .mobile-summary .mobile-absent strong {
+    color: #c23a4f;
+  }
+  .mobile-roll-calls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    padding: 10px;
+  }
+  .mobile-roll-calls > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+    min-width: 0;
+    padding: 7px 8px;
+    border-radius: 6px;
+  }
+  .mobile-roll-calls small {
+    overflow: hidden;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-roll-calls strong {
+    font-size: 13px;
+  }
+  .mobile-roll-calls .is-present {
+    background: #dff7e7;
+    color: #116d4a;
+  }
+  .mobile-roll-calls .is-absent {
+    background: #ffe2ee;
+    color: #a72e56;
   }
   .filters label {
     width: 100%;

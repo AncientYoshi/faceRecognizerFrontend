@@ -228,6 +228,35 @@
           </tbody>
         </table>
       </div>
+      <div class="mobile-register-list">
+        @for (student of percentageRows(); track student.studentId + student.courseId; let number = $index) {
+          <article class="mobile-student-card">
+            <header>
+              <span class="mobile-student-number">{{ attendanceReport.students.page * attendanceReport.students.size + number + 1 }}</span>
+              <div>
+                <strong>{{ student.studentName }}</strong>
+                <small>{{ student.studentNumber }}</small>
+              </div>
+              <b class="mobile-percentage">{{ student.attendancePercentage | number: '1.2-2' }}%</b>
+            </header>
+            <div class="mobile-summary">
+              <div class="mobile-present"><small>Present</small><strong>{{ student.presentSessions }}</strong></div>
+              <div class="mobile-absent"><small>Absent</small><strong>{{ student.absentSessions }}</strong></div>
+              <div><small>Total roll calls</small><strong>{{ student.totalSessions }}</strong></div>
+            </div>
+            @if (rollCallColumns().length) {
+              <div class="mobile-roll-calls">
+                @for (column of rollCallColumns(); track column.sessionId + '-' + column.callNumber) {
+                  <div [class.is-present]="attendanceMark(student.studentId, column) === 'P'" [class.is-absent]="attendanceMark(student.studentId, column) === 'A'">
+                    <small>{{ column.sessionDate | date: 'dd/MM' }} · #{{ column.callNumber }}</small>
+                    <strong>{{ attendanceMark(student.studentId, column) }}</strong>
+                  </div>
+                }
+              </div>
+            }
+          </article>
+        }
+      </div>
       @if (!loading() && !percentageRows().length) {
         <div class="empty">No enrolled students match these report filters.</div>
       }
