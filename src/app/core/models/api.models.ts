@@ -270,6 +270,17 @@ export interface SystemSetting {
   updatedBy:string|null; updatedAt:string;
 }
 
+export interface HardwareDevice {
+  id:string; deviceId:string; name:string; room:string|null; courseId:string|null;
+  courseCode:string|null; courseName:string|null; enabled:boolean; createdAt:string; updatedAt:string;
+}
+export interface HardwareDeviceCreatePayload {
+  deviceId:string; name:string; deviceKey:string; room:string|null; courseId:string|null; enabled:boolean;
+}
+export interface HardwareDeviceUpdatePayload {
+  name:string; room:string|null; courseId:string|null; newDeviceKey:string|null; enabled:boolean;
+}
+
 export interface UserSummary {
   id: string;
   email: string;

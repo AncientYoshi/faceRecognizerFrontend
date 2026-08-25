@@ -18,6 +18,7 @@ export const routes: Routes = [
       { path: 'courses', canActivate:[roleGuard], data: { roles:['ADMIN'],mode: 'courses' }, loadComponent: () => import('./features/admin/academic/admin-academic.component').then(m => m.AdminAcademicComponent) },
       { path: 'enrollments', canActivate:[roleGuard], data: { roles:['ADMIN'],mode: 'enrollments' }, loadComponent: () => import('./features/admin/academic/admin-academic.component').then(m => m.AdminAcademicComponent) },
       { path: 'assignments', canActivate:[roleGuard], data: { roles:['ADMIN'] }, loadComponent: () => import('./features/admin/assignments/department-assignments.component').then(m => m.DepartmentAssignmentsComponent) },
+      { path: 'hardware', canActivate:[roleGuard], data: { roles:['ADMIN'] }, loadComponent: () => import('./features/admin/hardware/admin-hardware.component').then(m => m.AdminHardwareComponent) },
       { path: 'timetables', loadComponent: () => import('./features/admin/timetable/admin-timetable.component').then(m => m.AdminTimetableComponent) },
       { path: 'sessions', data: { mode: 'sessions' }, loadComponent: () => import('./features/admin/attendance/admin-attendance.component').then(m => m.AdminAttendanceComponent) },
       { path: 'records', data: { mode: 'records' }, loadComponent: () => import('./features/admin/attendance/admin-attendance.component').then(m => m.AdminAttendanceComponent) },

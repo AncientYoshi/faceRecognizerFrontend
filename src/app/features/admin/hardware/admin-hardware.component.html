@@ -1,0 +1,354 @@
+<div class="hardware-page">
+  <header class="page-heading">
+    <div>
+      <p>Device administration</p>
+      <h1>Hardware Devices</h1>
+      <span>Register ESP32-CAM devices and manage their room or course bindings.</span>
+    </div>
+    <button type="button" (click)="open()"><sam-icon name="plus" />Register device</button>
+  </header>
+
+  <section class="security-note">
+    <sam-icon name="info" />
+    <div>
+      <strong>Device credentials are one-time secrets</strong
+      ><span
+        >Generate and save the key when registering or rotating a device. The backend stores only
+        its hash.</span
+      >
+    </div>
+  </section>
+
+  <form class="filters" [formGroup]="filter" (ngSubmit)="apply()">
+    <label
+      >Search
+      <span class="search-input"
+        ><sam-icon name="search" size="18" /><input
+          type="search"
+          formControlName="query"
+          placeholder="Device ID, name, or room"
+      /></span>
+    </label>
+    <label
+      >Status
+      <select formControlName="enabled">
+        <option value="">All devices</option>
+        <option value="true">Enabled</option>
+        <option value="false">Disabled</option>
+      </select>
+    </label>
+    <button type="submit" [disabled]="loading()">
+      @if (loading()) {
+        <span class="spinner small"></span>Loading…
+      } @else {
+        <sam-icon name="search" size="18" />Apply filters
+      }
+    </button>
+  </form>
+
+  @if (error()) {
+    <div class="error">
+      <sam-icon name="info" />{{ error() }}<button type="button" (click)="load()">Try again</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-notice" role="status" aria-live="polite">
+      <span class="spinner"></span>
+      <div>
+        <strong>Loading hardware devices…</strong
+        ><small>Retrieving the latest device configuration.</small>
+      </div>
+    </div>
+  }
+
+  @if (devices(); as response) {
+    <section class="device-card" [class.is-loading]="loading()" [attr.aria-busy]="loading()">
+      <header>
+        <div>
+          <h2>Registered devices</h2>
+          <span
+            >{{ response.totalElements }} device{{ response.totalElements === 1 ? '' : 's' }}</span
+          >
+        </div>
+      </header>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Device</th>
+              <th>Binding</th>
+              <th>Status</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (device of response.content; track device.id) {
+              <tr>
+                <td>
+                  <div class="device-identity">
+                    <span><sam-icon name="camera" /></span>
+                    <div>
+                      <strong>{{ device.name }}</strong
+                      ><small>{{ device.deviceId }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <strong>{{ device.room || 'Any configured room' }}</strong
+                  ><small>{{
+                    device.courseCode
+                      ? device.courseCode + ' — ' + device.courseName
+                      : 'Room binding only'
+                  }}</small>
+                </td>
+                <td>
+                  <span class="status" [class.enabled]="device.enabled">{{
+                    device.enabled ? 'Enabled' : 'Disabled'
+                  }}</span>
+                </td>
+                <td>
+                  {{ device.updatedAt | date: 'MMM d, y'
+                  }}<small>{{ device.updatedAt | date: 'h:mm a' }}</small>
+                </td>
+                <td>
+                  <div class="actions">
+                    <button type="button" (click)="open(device)">Edit</button
+                    ><button
+                      type="button"
+                      (click)="toggle(device)"
+                      [disabled]="workingId() === device.id"
+                    >
+                      {{ device.enabled ? 'Disable' : 'Enable' }}</button
+                    ><button
+                      type="button"
+                      class="delete"
+                      (click)="remove(device)"
+                      [disabled]="workingId() === device.id"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-list">
+        @for (device of response.content; track device.id) {
+          <article>
+            <header>
+              <span class="camera"><sam-icon name="camera" /></span>
+              <div>
+                <strong>{{ device.name }}</strong
+                ><small>{{ device.deviceId }}</small>
+              </div>
+              <span class="status" [class.enabled]="device.enabled">{{
+                device.enabled ? 'Enabled' : 'Disabled'
+              }}</span>
+            </header>
+            <dl>
+              <div>
+                <dt>Room</dt>
+                <dd>{{ device.room || '—' }}</dd>
+              </div>
+              <div>
+                <dt>Course</dt>
+                <dd>{{ device.courseCode || 'All matching room courses' }}</dd>
+              </div>
+              <div>
+                <dt>Updated</dt>
+                <dd>{{ device.updatedAt | date: 'MMM d, y' }}</dd>
+              </div>
+            </dl>
+            <footer>
+              <button type="button" (click)="open(device)">Edit</button
+              ><button
+                type="button"
+                (click)="toggle(device)"
+                [disabled]="workingId() === device.id"
+              >
+                {{ device.enabled ? 'Disable' : 'Enable' }}</button
+              ><button
+                type="button"
+                class="delete"
+                (click)="remove(device)"
+                [disabled]="workingId() === device.id"
+              >
+                Delete
+              </button>
+            </footer>
+          </article>
+        }
+      </div>
+
+      @if (!loading() && !response.content.length) {
+        <div class="empty">
+          <sam-icon name="camera" size="34" /><strong>No hardware devices found</strong
+          ><span>Register a device or change the filters.</span>
+        </div>
+      }
+
+      <footer class="pager">
+        <button type="button" [disabled]="response.first || loading()" (click)="move(-1)">
+          Previous</button
+        ><span>Page {{ response.page + 1 }} of {{ response.totalPages || 1 }}</span
+        ><button type="button" [disabled]="response.last || loading()" (click)="move(1)">
+          Next
+        </button>
+      </footer>
+    </section>
+  }
+</div>
+
+@if (modalOpen()) {
+  <div class="backdrop" role="presentation" (click)="closeForm()">
+    <section
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="device-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header>
+        <div>
+          <p>{{ editing() ? 'Update device' : 'New device' }}</p>
+          <h2 id="device-modal-title">
+            {{ editing() ? editing()!.name : 'Register hardware device' }}
+          </h2>
+        </div>
+        <button type="button" aria-label="Close" (click)="closeForm()">
+          <sam-icon name="x" />
+        </button>
+      </header>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-grid">
+          <label
+            >Device ID<input
+              formControlName="deviceId"
+              placeholder="CLASSROOM-01"
+              autocomplete="off"
+            /><small>Letters, numbers, dot, underscore, and hyphen only.</small>
+            @if (form.controls.deviceId.touched && form.controls.deviceId.invalid) {
+              <em>Enter a valid device ID.</em>
+            }
+          </label>
+          <label
+            >Display name<input formControlName="name" placeholder="Automation Lab Camera" />
+            @if (form.controls.name.touched && form.controls.name.invalid) {
+              <em>Device name is required.</em>
+            }
+          </label>
+          <label
+            >Room<input formControlName="room" placeholder="Must match timetable room" /><small
+              >Comparison ignores case and surrounding spaces.</small
+            ></label
+          >
+          <label
+            >Course binding<select formControlName="courseId">
+              <option value="">No course restriction</option>
+              @for (course of courses(); track course.id) {
+                <option [value]="course.id">{{ course.code }} — {{ course.name }}</option>
+              }</select
+            ><small>Using both room and course is the safest binding.</small></label
+          >
+        </div>
+
+        @if (bindingError()) {
+          <div class="form-error"><sam-icon name="info" size="18" />{{ bindingError() }}</div>
+        }
+
+        <section class="key-section">
+          <div>
+            <strong>{{ editing() ? 'Rotate device key (optional)' : 'Device key' }}</strong
+            ><span>{{
+              editing()
+                ? 'Leave blank to keep the existing key.'
+                : 'Save this key before configuring the ESP32.'
+            }}</span>
+          </div>
+          <label class="key-input"
+            ><input
+              [type]="keyVisible() ? 'text' : 'password'"
+              formControlName="deviceKey"
+              autocomplete="new-password"
+              placeholder="Minimum 16 characters"
+            /><button type="button" (click)="keyVisible.set(!keyVisible())">
+              {{ keyVisible() ? 'Hide' : 'Show' }}
+            </button></label
+          >
+          @if (form.controls.deviceKey.touched && form.controls.deviceKey.invalid) {
+            <em>Use a key between 16 and 200 characters.</em>
+          }
+          <div class="key-actions">
+            <button type="button" (click)="generateKey()">
+              <sam-icon name="refresh" size="17" />Generate secure key</button
+            ><button
+              type="button"
+              [disabled]="!form.controls.deviceKey.value"
+              (click)="copy(form.controls.deviceKey.value)"
+            >
+              {{ copied() ? 'Copied' : 'Copy key' }}
+            </button>
+          </div>
+        </section>
+
+        <label class="enabled-check"
+          ><input type="checkbox" formControlName="enabled" /><span
+            ><strong>Device enabled</strong
+            ><small>Disabled devices cannot authenticate or record attendance.</small></span
+          ></label
+        >
+
+        <footer>
+          <button type="button" (click)="closeForm()">Cancel</button
+          ><button type="submit" class="primary" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner small"></span>Saving…
+            } @else {
+              {{ editing() ? 'Save changes' : 'Register device' }}
+            }
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+@if (credential(); as secret) {
+  <div class="backdrop credential-backdrop">
+    <section
+      class="credential-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="credential-title"
+    >
+      <span class="success-mark"><sam-icon name="check" size="28" /></span>
+      <p>{{ secret.rotated ? 'Key rotated' : 'Device registered' }}</p>
+      <h2 id="credential-title">Save the device credentials now</h2>
+      <span
+        >This plaintext key will disappear when you close this dialog and cannot be retrieved from
+        the backend.</span
+      >
+      <dl>
+        <div>
+          <dt>Device ID</dt>
+          <dd>{{ secret.deviceId }}</dd>
+        </div>
+        <div>
+          <dt>Device key</dt>
+          <dd>{{ secret.key }}</dd>
+        </div>
+      </dl>
+      <button type="button" class="copy-secret" (click)="copy(secret.key)">
+        {{ copied() ? 'Key copied' : 'Copy device key' }}
+      </button>
+      <button type="button" class="saved" (click)="dismissCredential()">
+        I have saved the key
+      </button>
+    </section>
+  </div>
+}
