@@ -38,9 +38,23 @@
       /></span>
     </label>
     <button type="submit" [disabled]="loading()">
-      <sam-icon name="search" size="18" />Apply filters
+      @if (loading()) {
+        <span class="button-spinner"></span>Loading…
+      } @else {
+        <sam-icon name="search" size="18" />Apply filters
+      }
     </button>
   </form>
+
+  @if (loading()) {
+    <div class="loading-notice" role="status" aria-live="polite">
+      <span class="loading-spinner"></span>
+      <div>
+        <strong>{{ report() ? 'Updating attendance records…' : 'Loading overall attendance…' }}</strong>
+        <small>Please wait while the latest report is retrieved.</small>
+      </div>
+    </div>
+  }
 
   @if (error()) {
     <div class="error">
@@ -74,7 +88,7 @@
       </article>
     </section>
 
-    <section class="report-card">
+    <section class="report-card" [class.is-loading]="loading()" [attr.aria-busy]="loading()">
       <header>
         <div>
           <h2>{{ yearLabel(attendance.studyYear) }} students</h2>
@@ -205,7 +219,5 @@
         </button>
       </footer>
     </section>
-  } @else if (loading()) {
-    <div class="loading"><span></span>Loading overall attendance…</div>
   }
 </div>

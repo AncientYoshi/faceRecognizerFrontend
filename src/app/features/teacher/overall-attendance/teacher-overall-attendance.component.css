@@ -108,6 +108,47 @@
 .filters > button:disabled {
   opacity: 0.65;
 }
+.button-spinner,
+.loading-spinner {
+  width: 17px;
+  height: 17px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.button-spinner {
+  width: 15px;
+  height: 15px;
+}
+.loading-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  border: 1px solid #cfe0fb;
+  border-radius: 10px;
+  background: #eef5ff;
+  color: #2164c5;
+  box-shadow: 0 5px 18px #205fbe10;
+}
+.loading-notice div {
+  min-width: 0;
+}
+.loading-notice strong,
+.loading-notice small {
+  display: block;
+}
+.loading-notice strong {
+  font-size: 13px;
+}
+.loading-notice small {
+  margin-top: 3px;
+  color: #687c99;
+  font-size: 12px;
+}
 .error {
   display: flex;
   align-items: center;
@@ -194,6 +235,11 @@
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 8px 28px #142d5109;
+  transition: opacity 0.2s ease;
+}
+.report-card.is-loading {
+  opacity: 0.58;
+  pointer-events: none;
 }
 .report-card > header {
   display: flex;
@@ -377,25 +423,6 @@ i.risk {
 .pager button:disabled {
   opacity: 0.45;
   cursor: default;
-}
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 260px;
-  border: 1px solid #dee6ee;
-  border-radius: 12px;
-  background: #fff;
-  color: #718095;
-}
-.loading span {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #cdd8e5;
-  border-top-color: #2672e5;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
   to {
