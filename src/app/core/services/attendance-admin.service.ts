@@ -354,6 +354,18 @@ export class AttendanceAdminService {
       { params: this.overallParams(filters) },
     );
   }
+  exportStudentOverallAttendance(
+    filters: TeacherOverallAttendanceFilters,
+  ): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${environment.apiUrl}/reports/attendance/students/overall/export/excel`, {
+      params: this.overallParams(filters, false),
+      headers: {
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
   private params(filters: AttendanceFilters): HttpParams {
     let p = new HttpParams();
     Object.entries(filters).forEach(([k, v]) => {
@@ -371,13 +383,14 @@ export class AttendanceAdminService {
     if (paged) p = p.set('page', String(filters.page || 0)).set('size', String(filters.size || 20));
     return p;
   }
-  private overallParams(filters: TeacherOverallAttendanceFilters): HttpParams {
+  private overallParams(filters: TeacherOverallAttendanceFilters, paged = true): HttpParams {
     let p = new HttpParams()
       .set('studyYear', String(filters.studyYear))
       .set('period', filters.period)
-      .set('date', filters.date)
-      .set('page', String(filters.page || 0))
-      .set('size', String(filters.size || 20));
+      .set('date', filters.date);
+    if (paged) {
+      p = p.set('page', String(filters.page || 0)).set('size', String(filters.size || 20));
+    }
     if (filters.query) p = p.set('query', filters.query);
     return p;
   }

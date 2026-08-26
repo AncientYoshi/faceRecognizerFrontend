@@ -5,6 +5,19 @@
       <h1>Overall Student Attendance</h1>
       <span>Review each student's combined attendance across their enrolled courses.</span>
     </div>
+    <button
+      class="download-button"
+      type="button"
+      [disabled]="loading() || downloading() || !report()"
+      (click)="downloadExcel()"
+      aria-label="Download overall attendance as Excel"
+    >
+      @if (downloading()) {
+        <i class="button-spinner"></i><strong class="download-label">Downloading…</strong>
+      } @else {
+        <sam-icon name="report" size="18" /><strong class="download-label">Download Excel</strong>
+      }
+    </button>
   </header>
 
   <form class="filters" [formGroup]="filter" (ngSubmit)="apply()">

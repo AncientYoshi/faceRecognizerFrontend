@@ -1,6 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import {
   AttendanceAdminService,
   TeacherOverallAttendanceFilters,
@@ -25,6 +26,7 @@ export class TeacherOverallAttendanceComponent implements OnInit {
 
   readonly report = signal<TeacherCohortAttendanceReport | null>(null);
   readonly loading = signal(true);
+  readonly downloading = signal(false);
   readonly error = signal('');
   readonly page = signal(0);
   readonly years = [1, 2, 3, 4, 5, 6];
@@ -73,6 +75,40 @@ export class TeacherOverallAttendanceComponent implements OnInit {
     this.load();
   }
 
+  downloadExcel(): void {
+    if (this.downloading()) return;
+
+    this.downloading.set(true);
+    this.error.set('');
+    this.api
+      .exportStudentOverallAttendance(this.filters())
+      .pipe(finalize(() => this.downloading.set(false)))
+      .subscribe({
+        next: (response) => {
+          if (!response.body?.size) {
+            this.error.set('The downloaded attendance workbook was empty.');
+            return;
+          }
+
+          const url = URL.createObjectURL(response.body);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = this.downloadFilename(response.headers.get('content-disposition'));
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        },
+        error: (error) => {
+          this.error.set(
+            error.status === 0
+              ? 'Cannot reach the backend API.'
+              : error.error?.message || 'The attendance workbook could not be downloaded.',
+          );
+        },
+      });
+  }
+
   yearLabel(year: number): string {
     return (
       ['', 'First Year', 'Second Year', 'Third Year', 'Fourth Year', 'Fifth Year', 'Sixth Year'][
@@ -119,6 +155,25 @@ export class TeacherOverallAttendanceComponent implements OnInit {
     if (!value) return '—';
     const [year, month, day] = value.split('-');
     return `${day}/${month}/${year}`;
+  }
+
+  private downloadFilename(contentDisposition: string | null): string {
+    const encodedName = /filename\*=UTF-8''([^;]+)/i.exec(contentDisposition || '')?.[1];
+    const plainName = /filename="?([^";]+)"?/i.exec(contentDisposition || '')?.[1];
+    let filename = plainName;
+
+    if (encodedName) {
+      try {
+        filename = decodeURIComponent(encodedName);
+      } catch {
+        filename = encodedName;
+      }
+    }
+
+    return (
+      filename ||
+      `overall-attendance-year-${this.filter.controls.studyYear.value}-${this.filter.controls.date.value || this.today()}.xlsx`
+    ).replace(/[\\/]/g, '-');
   }
 
   private today(): string {
