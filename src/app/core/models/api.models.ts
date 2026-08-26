@@ -87,20 +87,38 @@ export interface Course {
 }
 
 export interface Department {
-  id: string; code: string; name: string; description: string;
-  studentCount: number; teacherCount: number; courseCount: number;
-  createdAt: string; updatedAt: string;
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  studentCount: number;
+  teacherCount: number;
+  courseCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Enrollment {
-  id: string; courseId: string; courseCode: string; courseName: string;
-  studentId: string; studentUserId: string; studentNumber: string;
-  studyYear: number; studentName: string; enrolledAt: string;
+  id: string;
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  studentId: string;
+  studentUserId: string;
+  studentNumber: string;
+  studyYear: number;
+  studentName: string;
+  enrolledAt: string;
 }
 
 export interface CoursePayload {
-  code: string; name: string; semester: string; academicYear: string;
-  studyYear: number; departmentId: string; teacherId: string;
+  code: string;
+  name: string;
+  semester: string;
+  academicYear: string;
+  studyYear: number;
+  departmentId: string;
+  teacherId: string;
 }
 
 export interface PageResponse<T> {
@@ -174,111 +192,246 @@ export interface AttendanceVerification {
   message: string;
 }
 
-export interface SessionPayload { courseId: string; sessionDate: string; startTime: string; endTime: string; rollCallCount: number; }
+export interface SessionPayload {
+  courseId: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  rollCallCount: number;
+}
 export interface AttendanceReport {
-  totalRecords: number; expectedAttendance: number; attendanceRate: number;
-  generatedAt: string; records: PageResponse<AttendanceRecord>;
+  totalRecords: number;
+  expectedAttendance: number;
+  attendanceRate: number;
+  generatedAt: string;
+  records: PageResponse<AttendanceRecord>;
 }
 
 export type AttendancePercentagePeriod = 'WEEK' | 'MONTH';
 export interface StudentAttendancePercentage {
-  studentId:string; studentUserId:string; studentNumber:string; studyYear:number; studentName:string;
-  courseId:string; courseCode:string; courseName:string; totalSessions:number;
-  presentSessions:number; absentSessions:number; attendancePercentage:number;
+  studentId: string;
+  studentUserId: string;
+  studentNumber: string;
+  studyYear: number;
+  studentName: string;
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  totalSessions: number;
+  presentSessions: number;
+  absentSessions: number;
+  attendancePercentage: number;
 }
 export interface StudentAttendancePercentageReport {
-  period:AttendancePercentagePeriod; referenceDate:string; from:string; to:string;
-  generatedAt:string; students:PageResponse<StudentAttendancePercentage>;
+  period: AttendancePercentagePeriod;
+  referenceDate: string;
+  from: string;
+  to: string;
+  generatedAt: string;
+  students: PageResponse<StudentAttendancePercentage>;
 }
 
 export type StudentAttendancePeriod = 'ALL' | 'WEEK' | 'MONTH';
 export interface TeacherStudentOverallAttendance {
-  studentId:string; studentUserId:string; studentNumber:string; studentName:string; email:string;
-  studyYear:number; courseCount:number; overallAttendancePercentage:number;
-  totalEligibleRollCalls:number; totalPresentRollCalls:number; totalAbsentRollCalls:number;
+  studentId: string;
+  studentUserId: string;
+  studentNumber: string;
+  studentName: string;
+  email: string;
+  studyYear: number;
+  courseCount: number;
+  overallAttendancePercentage: number;
+  totalEligibleRollCalls: number;
+  totalPresentRollCalls: number;
+  totalAbsentRollCalls: number;
 }
 export interface TeacherCohortAttendanceReport {
-  teacherId:string; departmentId:string; departmentCode:string; departmentName:string;
-  studyYear:number; period:StudentAttendancePeriod; referenceDate:string; from:string; to:string;
-  generatedAt:string; calculationMethod:string; students:PageResponse<TeacherStudentOverallAttendance>;
+  teacherId: string;
+  departmentId: string;
+  departmentCode: string;
+  departmentName: string;
+  studyYear: number;
+  period: StudentAttendancePeriod;
+  referenceDate: string;
+  from: string;
+  to: string;
+  generatedAt: string;
+  calculationMethod: string;
+  students: PageResponse<TeacherStudentOverallAttendance>;
 }
 
-export interface TeacherCourseSummary { courseId:string; courseCode:string; courseName:string; enrolledStudents:number; }
+export interface TeacherCourseSummary {
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  enrolledStudents: number;
+}
 export interface TeacherDashboard {
-  teacherId:string; teacherName:string; myCourses:TeacherCourseSummary[];
-  todaySessions:AttendanceSession[]; attendanceRecords:number;
-  expectedAttendance:number; attendanceRate:number;
+  teacherId: string;
+  teacherName: string;
+  myCourses: TeacherCourseSummary[];
+  todaySessions: AttendanceSession[];
+  attendanceRecords: number;
+  expectedAttendance: number;
+  attendanceRate: number;
 }
 export interface StudentDashboard {
-  overallAttendancePercentage:number;
-  currentMonthPercentage:number;
-  previousMonthPercentage:number;
-  monthlyChange:number;
-  classesAttended:number;
-  eligibleSessions:number;
-  presentCount:number;
-  absentCount:number;
-  todaySessionCount:number;
-  activeCourseCount:number;
-  requiredAttendancePercentage:number;
-  todaySessions:AttendanceSession[];
+  overallAttendancePercentage: number;
+  currentMonthPercentage: number;
+  previousMonthPercentage: number;
+  monthlyChange: number;
+  classesAttended: number;
+  eligibleSessions: number;
+  presentCount: number;
+  absentCount: number;
+  todaySessionCount: number;
+  activeCourseCount: number;
+  requiredAttendancePercentage: number;
+  todaySessions: AttendanceSession[];
 }
-export interface FaceRegistration { id:string; studentId:string; studentNumber:string; embeddingId:string; registeredAt:string; updatedAt:string; }
+export interface FaceRegistration {
+  id: string;
+  studentId: string;
+  studentNumber: string;
+  embeddingId: string;
+  registeredAt: string;
+  updatedAt: string;
+}
 
 export interface ProfileAssignment {
-  profileId:string; userId:string; fullName:string; referenceNumber:string;
-  departmentId:string|null; departmentName:string|null;
+  profileId: string;
+  userId: string;
+  fullName: string;
+  referenceNumber: string;
+  departmentId: string | null;
+  departmentName: string | null;
 }
 
 export interface AssignedTeacher {
-  teacherId:string; userId:string; employeeNumber:string; email:string;
-  firstName:string; lastName:string; fullName:string; departmentId:string;
-  departmentCode:string; departmentName:string;
+  teacherId: string;
+  userId: string;
+  employeeNumber: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  departmentId: string;
+  departmentCode: string;
+  departmentName: string;
 }
 
 export interface AssignedStudent {
-  studentId:string; userId:string; studentNumber:string; email:string;
-  studyYear:number; firstName:string; lastName:string; fullName:string; departmentId:string;
-  departmentCode:string; departmentName:string;
+  studentId: string;
+  userId: string;
+  studentNumber: string;
+  email: string;
+  studyYear: number;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  departmentId: string;
+  departmentCode: string;
+  departmentName: string;
 }
 
-export type DayOfWeek='MONDAY'|'TUESDAY'|'WEDNESDAY'|'THURSDAY'|'FRIDAY'|'SATURDAY'|'SUNDAY';
+export type DayOfWeek =
+  'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 export interface TimetableEntry {
-  id:string; courseId:string; courseCode:string; courseName:string; dayOfWeek:DayOfWeek;
-  startTime:string; endTime:string; room:string|null; effectiveFrom:string|null;
-  effectiveTo:string|null; active:boolean; createdAt:string; updatedAt:string;
+  id: string;
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string;
+  room: string | null;
+  effectiveFrom: string | null;
+  effectiveTo: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 export interface TimetablePayload {
-  courseId:string; dayOfWeek:DayOfWeek; startTime:string; endTime:string;
-  room:string|null; effectiveFrom:string|null; effectiveTo:string|null; active:boolean;
+  courseId: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string;
+  room: string | null;
+  effectiveFrom: string | null;
+  effectiveTo: string | null;
+  active: boolean;
 }
 export interface StudentTimetableEntry {
-  timetableId:string; courseId:string; courseCode:string; courseName:string; semester:string;
-  academicYear:string; teacherId:string; teacherName:string; dayOfWeek:DayOfWeek;
-  date:string; startTime:string; endTime:string; room:string|null; today:boolean;
+  timetableId: string;
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  semester: string;
+  academicYear: string;
+  teacherId: string;
+  teacherName: string;
+  dayOfWeek: DayOfWeek;
+  date: string;
+  startTime: string;
+  endTime: string;
+  room: string | null;
+  today: boolean;
 }
 export interface StudentTimetable {
-  studentId:string; today:string; weekStart:string; weekEnd:string; timeZone:string;
-  entries:StudentTimetableEntry[];
+  studentId: string;
+  today: string;
+  weekStart: string;
+  weekEnd: string;
+  timeZone: string;
+  entries: StudentTimetableEntry[];
 }
 export interface AuditLog {
-  id:string; userId:string|null; userEmail:string|null; action:string; entityType:string|null;
-  entityId:string|null; details:string|null; ipAddress:string|null; createdAt:string;
+  id: string;
+  userId: string | null;
+  userEmail: string | null;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  details: string | null;
+  ipAddress: string | null;
+  createdAt: string;
 }
 export interface SystemSetting {
-  id:string; key:string; value:string; valueType:string; description:string;
-  updatedBy:string|null; updatedAt:string;
+  id: string;
+  key: string;
+  value: string;
+  valueType: string;
+  description: string;
+  updatedBy: string | null;
+  updatedAt: string;
 }
 
 export interface HardwareDevice {
-  id:string; deviceId:string; name:string; room:string|null; courseId:string|null;
-  courseCode:string|null; courseName:string|null; enabled:boolean; createdAt:string; updatedAt:string;
+  id: string;
+  deviceId: string;
+  name: string;
+  room: string | null;
+  courseId: string | null;
+  courseCode: string | null;
+  courseName: string | null;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 export interface HardwareDeviceCreatePayload {
-  deviceId:string; name:string; deviceKey:string; room:string|null; courseId:string|null; enabled:boolean;
+  deviceId: string;
+  name: string;
+  deviceKey: string;
+  room: string | null;
+  courseId: string | null;
+  enabled: boolean;
 }
 export interface HardwareDeviceUpdatePayload {
-  name:string; room:string|null; courseId:string|null; newDeviceKey:string|null; enabled:boolean;
+  name: string;
+  room: string | null;
+  courseId: string | null;
+  newDeviceKey: string | null;
+  enabled: boolean;
 }
 
 export interface UserSummary {

@@ -9,9 +9,11 @@ import { StudentService } from '../../../core/services/student.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
-  selector: 'app-student-sessions', standalone: true,
+  selector: 'app-student-sessions',
+  standalone: true,
   imports: [DatePipe, FormsModule, RouterLink, IconComponent],
-  templateUrl: './student-sessions.component.html', styleUrl: './student-sessions.component.css',
+  templateUrl: './student-sessions.component.html',
+  styleUrl: './student-sessions.component.css',
 })
 export class StudentSessionsComponent implements OnInit {
   private readonly service = inject(AttendanceService);
@@ -19,23 +21,36 @@ export class StudentSessionsComponent implements OnInit {
   readonly sessions = signal<AttendanceSession[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
-  selectedDate = new Date().toISOString().slice(0,10);
+  selectedDate = new Date().toISOString().slice(0, 10);
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+  }
   load(): void {
     this.loading.set(true);
     this.error.set('');
-    forkJoin({ sessions: this.service.listSessions(this.selectedDate), courses: this.student.getMyCourses() }).subscribe({
+    forkJoin({
+      sessions: this.service.listSessions(this.selectedDate),
+      courses: this.student.getMyCourses(),
+    }).subscribe({
       next: ({ sessions, courses }) => {
-        const enrolledCourseIds = new Set(courses.content.map(course => course.id));
-        this.sessions.set(sessions.content.filter(session => enrolledCourseIds.has(session.courseId)));
+        const enrolledCourseIds = new Set(courses.content.map((course) => course.id));
+        this.sessions.set(
+          sessions.content.filter((session) => enrolledCourseIds.has(session.courseId)),
+        );
         this.loading.set(false);
       },
-      error: error => {
+      error: (error) => {
         this.loading.set(false);
-        this.error.set(error.status === 0 ? 'Cannot reach the backend API.' : (error.error?.message || 'Could not load your attendance sessions.'));
+        this.error.set(
+          error.status === 0
+            ? 'Cannot reach the backend API.'
+            : error.error?.message || 'Could not load your attendance sessions.',
+        );
       },
     });
   }
-  canVerify(session: AttendanceSession): boolean { return session.status === 'ACTIVE'; }
+  canVerify(session: AttendanceSession): boolean {
+    return session.status === 'ACTIVE';
+  }
 }

@@ -19,24 +19,37 @@ export class StudentCoursesComponent implements OnInit {
   readonly filteredCourses = computed(() => {
     const query = this.query().trim().toLowerCase();
     if (!query) return this.courses();
-    return this.courses().filter(course =>
-      `${course.code} ${course.name} ${course.teacherName} ${course.departmentName}`.toLowerCase().includes(query),
+    return this.courses().filter((course) =>
+      `${course.code} ${course.name} ${course.teacherName} ${course.departmentName}`
+        .toLowerCase()
+        .includes(query),
     );
   });
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+  }
 
   load(force = false): void {
     this.loading.set(true);
     this.error.set('');
     this.student.getMyCourses(force).subscribe({
-      next: page => { this.courses.set(page.content); this.loading.set(false); },
-      error: error => {
+      next: (page) => {
+        this.courses.set(page.content);
         this.loading.set(false);
-        this.error.set(error.status === 0 ? 'Cannot reach the backend API.' : (error.error?.message || 'Could not load your enrolled courses.'));
+      },
+      error: (error) => {
+        this.loading.set(false);
+        this.error.set(
+          error.status === 0
+            ? 'Cannot reach the backend API.'
+            : error.error?.message || 'Could not load your enrolled courses.',
+        );
       },
     });
   }
 
-  updateQuery(event: Event): void { this.query.set((event.target as HTMLInputElement).value); }
+  updateQuery(event: Event): void {
+    this.query.set((event.target as HTMLInputElement).value);
+  }
 }

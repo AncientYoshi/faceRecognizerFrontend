@@ -2,46 +2,412 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { EMPTY, Observable, delay, expand, of, reduce } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AttendancePercentagePeriod, AttendanceRecord, AttendanceReport, AttendanceSession, PageResponse, SessionPayload, StudentAttendancePercentageReport, StudentAttendancePeriod, TeacherCohortAttendanceReport, TeacherStudentOverallAttendance } from '../models/api.models';
+import {
+  AttendancePercentagePeriod,
+  AttendanceRecord,
+  AttendanceReport,
+  AttendanceSession,
+  PageResponse,
+  SessionPayload,
+  StudentAttendancePercentageReport,
+  StudentAttendancePeriod,
+  TeacherCohortAttendanceReport,
+  TeacherStudentOverallAttendance,
+} from '../models/api.models';
 import { AuthService } from './auth.service';
 import { PREVIEW_SESSIONS } from './attendance.service';
 
-export interface AttendanceFilters { courseId?:string; teacherId?:string; studentId?:string; sessionId?:string; departmentId?:string; date?:string; status?:string; month?:string; from?:string; to?:string; page?:number; size?:number; }
-export interface StudentPercentageFilters { period:AttendancePercentagePeriod; date:string; courseId?:string; studyYear?:number; query?:string; page?:number; size?:number; }
-export interface TeacherOverallAttendanceFilters { studyYear:number; period:StudentAttendancePeriod; date:string; query?:string; page?:number; size?:number; }
+export interface AttendanceFilters {
+  courseId?: string;
+  teacherId?: string;
+  studentId?: string;
+  sessionId?: string;
+  departmentId?: string;
+  date?: string;
+  status?: string;
+  month?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  size?: number;
+}
+export interface StudentPercentageFilters {
+  period: AttendancePercentagePeriod;
+  date: string;
+  courseId?: string;
+  studyYear?: number;
+  query?: string;
+  page?: number;
+  size?: number;
+}
+export interface TeacherOverallAttendanceFilters {
+  studyYear: number;
+  period: StudentAttendancePeriod;
+  date: string;
+  query?: string;
+  page?: number;
+  size?: number;
+}
 
-const PREVIEW_REPORT_SESSIONS: AttendanceSession[] = [3,10,17,20].map((day,index)=>({
-  id:`preview-report-${index+1}`,courseId:'c1',courseCode:'CSE-2103',courseName:'Programming Fundamentals',teacherId:'preview-teacher',teacherUserId:'preview-teacher-user',teacherName:'John Smith',sessionDate:`2026-08-${String(day).padStart(2,'0')}`,startTime:`2026-08-${String(day).padStart(2,'0')}T03:30:00Z`,endTime:`2026-08-${String(day).padStart(2,'0')}T05:30:00Z`,rollCallCount:3,status:'CLOSED',createdAt:'',updatedAt:''
+const PREVIEW_REPORT_SESSIONS: AttendanceSession[] = [3, 10, 17, 20].map((day, index) => ({
+  id: `preview-report-${index + 1}`,
+  courseId: 'c1',
+  courseCode: 'CSE-2103',
+  courseName: 'Programming Fundamentals',
+  teacherId: 'preview-teacher',
+  teacherUserId: 'preview-teacher-user',
+  teacherName: 'John Smith',
+  sessionDate: `2026-08-${String(day).padStart(2, '0')}`,
+  startTime: `2026-08-${String(day).padStart(2, '0')}T03:30:00Z`,
+  endTime: `2026-08-${String(day).padStart(2, '0')}T05:30:00Z`,
+  rollCallCount: 3,
+  status: 'CLOSED',
+  createdAt: '',
+  updatedAt: '',
 }));
-const PREVIEW_REPORT_RECORDS: AttendanceRecord[] = PREVIEW_REPORT_SESSIONS.slice(0,3).map((session,index)=>({
-  id:`preview-attendance-${index+1}`,studentId:'preview-student',studentName:'Mia Anderson',studentNumber:'STU-001',courseId:'c1',courseCode:'CSE-2103',courseName:'Programming Fundamentals',sessionId:session.id,attendanceTime:session.endTime,status:'PRESENT',similarityScore:.97,verifiedAt:session.endTime
-}));
-@Injectable({providedIn:'root'})
-export class AttendanceAdminService{
-  private http=inject(HttpClient);private auth=inject(AuthService);private previewSessions=signal([...PREVIEW_REPORT_SESSIONS,...PREVIEW_SESSIONS]);
-  sessions(filters:AttendanceFilters={}):Observable<PageResponse<AttendanceSession>>{if(this.auth.isPreview()){const rows=this.previewSessions().filter(x=>(!filters.courseId||x.courseId===filters.courseId)&&(!filters.teacherId||x.teacherId===filters.teacherId)&&(!filters.date||x.sessionDate===filters.date)&&(!filters.status||x.status===filters.status));return of(this.page(rows,filters.page||0,filters.size||100))}return this.http.get<PageResponse<AttendanceSession>>(`${environment.apiUrl}/attendance-sessions`,{params:this.params(filters)})}
-  createSession(body:SessionPayload,idempotencyKey?:string):Observable<AttendanceSession>{if(this.auth.isPreview()){const x:AttendanceSession={id:crypto.randomUUID(),...body,courseCode:'PREVIEW',courseName:'Preview Course',teacherId:'',teacherUserId:'',teacherName:'Preview Teacher',status:'SCHEDULED',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};this.previewSessions.update(v=>[x,...v]);return of(x)}return this.http.post<AttendanceSession>(`${environment.apiUrl}/attendance-sessions`,body,{headers:idempotencyKey?{'Idempotency-Key':idempotencyKey}:{}})}
-  updateSession(id:string,body:SessionPayload):Observable<AttendanceSession>{if(this.auth.isPreview()){const old=this.previewSessions().find(x=>x.id===id)!;const x={...old,...body};this.previewSessions.update(v=>v.map(y=>y.id===id?x:y));return of(x)}return this.http.put<AttendanceSession>(`${environment.apiUrl}/attendance-sessions/${id}`,body)}
-  action(id:string,action:'start'|'close'|'cancel'):Observable<AttendanceSession>{if(this.auth.isPreview()){const status=action==='start'?'ACTIVE':action==='close'?'CLOSED':'CANCELLED';const old=this.previewSessions().find(x=>x.id===id)!;const x={...old,status} as AttendanceSession;this.previewSessions.update(v=>v.map(y=>y.id===id?x:y));return of(x)}return this.http.post<AttendanceSession>(`${environment.apiUrl}/attendance-sessions/${id}/${action}`,{})}
-  deleteSession(id:string):Observable<void>{if(this.auth.isPreview()){this.previewSessions.update(v=>v.filter(x=>x.id!==id));return of(undefined)}return this.http.delete<void>(`${environment.apiUrl}/attendance-sessions/${id}`)}
-  records(filters:AttendanceFilters={}):Observable<PageResponse<AttendanceRecord>>{if(this.auth.isPreview()){const rows=PREVIEW_REPORT_RECORDS.filter(x=>(!filters.courseId||x.courseId===filters.courseId)&&(!filters.studentId||x.studentId===filters.studentId)&&(!filters.sessionId||x.sessionId===filters.sessionId));return of(this.page(rows,filters.page||0,filters.size||100))}return this.http.get<PageResponse<AttendanceRecord>>(`${environment.apiUrl}/attendance`,{params:this.params(filters)})}
-  allSessions(filters:AttendanceFilters={}):Observable<AttendanceSession[]>{return this.sessions({...filters,page:0,size:100}).pipe(expand(page=>page.last?EMPTY:this.sessions({...filters,page:page.page+1,size:100})),reduce((all,page)=>[...all,...page.content],[] as AttendanceSession[]))}
-  allRecords(filters:AttendanceFilters={}):Observable<AttendanceRecord[]>{return this.records({...filters,page:0,size:100}).pipe(expand(page=>page.last?EMPTY:this.records({...filters,page:page.page+1,size:100})),reduce((all,page)=>[...all,...page.content],[] as AttendanceRecord[]))}
-  record(id:string):Observable<AttendanceRecord>{return this.http.get<AttendanceRecord>(`${environment.apiUrl}/attendance/${id}`)}
-  report(filters:AttendanceFilters={}):Observable<AttendanceReport>{if(this.auth.isPreview()){const records=this.page<AttendanceRecord>([],0,50);return of({totalRecords:47,expectedAttendance:50,attendanceRate:94,generatedAt:new Date().toISOString(),records})}return this.http.get<AttendanceReport>(`${environment.apiUrl}/reports/attendance`,{params:this.params(filters)})}
-  export(format:'pdf'|'excel',filters:AttendanceFilters):Observable<HttpResponse<Blob>>{return this.http.get(`${environment.apiUrl}/reports/attendance/export/${format}`,{params:this.params(filters),observe:'response',responseType:'blob'})}
-  studentPercentages(filters:StudentPercentageFilters):Observable<StudentAttendancePercentageReport>{if(this.auth.isPreview()){const rows=[{studentId:'preview-student',studentUserId:'preview-user',studentNumber:'STU-001',studyYear:2,studentName:'Mia Anderson',courseId:'c1',courseCode:'CSE-2103',courseName:'Programming Fundamentals',totalSessions:12,presentSessions:9,absentSessions:3,attendancePercentage:75}];const range=this.previewRange(filters.period,filters.date);return of({period:filters.period,referenceDate:filters.date,from:range.from,to:range.to,generatedAt:new Date().toISOString(),students:this.page(rows.filter(x=>(!filters.courseId||x.courseId===filters.courseId)&&(!filters.studyYear||x.studyYear===filters.studyYear)),filters.page||0,filters.size||20)})}return this.http.get<StudentAttendancePercentageReport>(`${environment.apiUrl}/reports/attendance/students`,{params:this.percentageParams(filters,true)})}
-  exportStudentPercentages(format:'pdf'|'excel',filters:StudentPercentageFilters):Observable<HttpResponse<Blob>>{const accept=format==='pdf'?'application/pdf':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';return this.http.get(`${environment.apiUrl}/reports/attendance/students/export/${format}`,{params:this.percentageParams(filters,false),headers:{Accept:accept},observe:'response',responseType:'blob'})}
-  studentOverallAttendance(filters:TeacherOverallAttendanceFilters):Observable<TeacherCohortAttendanceReport>{if(this.auth.isPreview()){const rows:TeacherStudentOverallAttendance[]=[
-      {studentId:'overall-1',studentUserId:'overall-user-1',studentNumber:'VMC-1',studentName:'Honey Soe',email:'honey.soe@example.edu',studyYear:5,courseCount:5,overallAttendancePercentage:91.67,totalEligibleRollCalls:60,totalPresentRollCalls:55,totalAbsentRollCalls:5},
-      {studentId:'overall-2',studentUserId:'overall-user-2',studentNumber:'VMC-11',studentName:'Paing Swan Pyae',email:'paing.swan@example.edu',studyYear:5,courseCount:5,overallAttendancePercentage:78.33,totalEligibleRollCalls:60,totalPresentRollCalls:47,totalAbsentRollCalls:13},
-      {studentId:'overall-3',studentUserId:'overall-user-3',studentNumber:'VMC-14',studentName:'Zay Nyi Nyi Soe',email:'zay.nyi@example.edu',studyYear:5,courseCount:4,overallAttendancePercentage:62.5,totalEligibleRollCalls:48,totalPresentRollCalls:30,totalAbsentRollCalls:18},
-      {studentId:'overall-4',studentUserId:'overall-user-4',studentNumber:'VMC-2',studentName:'Hsue Ei Hlaing',email:'hsue.ei@example.edu',studyYear:5,courseCount:5,overallAttendancePercentage:45,totalEligibleRollCalls:60,totalPresentRollCalls:27,totalAbsentRollCalls:33},
-    ];const query=filters.query?.trim().toLowerCase();const matching=rows.filter(x=>x.studyYear===filters.studyYear&&(!query||`${x.studentName} ${x.studentNumber} ${x.email}`.toLowerCase().includes(query)));const range=this.previewOverallRange(filters.period,filters.date);return of({teacherId:'preview-teacher',departmentId:'preview-department',departmentCode:'MECH',departmentName:'Mechatronics',studyYear:filters.studyYear,period:filters.period,referenceDate:filters.date,from:range.from,to:range.to,generatedAt:new Date().toISOString(),calculationMethod:'Arithmetic mean across each student\'s actual enrolled course count',students:this.page(matching,filters.page||0,filters.size||20)}).pipe(delay(450))}return this.http.get<TeacherCohortAttendanceReport>(`${environment.apiUrl}/reports/attendance/students/overall`,{params:this.overallParams(filters)})}
-  private params(filters:AttendanceFilters):HttpParams{let p=new HttpParams();Object.entries(filters).forEach(([k,v])=>{if(v!==undefined&&v!==null&&v!=='')p=p.set(k,String(v))});if(!p.has('page'))p=p.set('page','0');if(!p.has('size'))p=p.set('size','100');return p}
-  private percentageParams(filters:StudentPercentageFilters,paged:boolean):HttpParams{let p=new HttpParams().set('period',filters.period).set('date',filters.date);if(filters.courseId)p=p.set('courseId',filters.courseId);if(filters.studyYear)p=p.set('studyYear',filters.studyYear);if(filters.query)p=p.set('query',filters.query);if(paged)p=p.set('page',String(filters.page||0)).set('size',String(filters.size||20));return p}
-  private overallParams(filters:TeacherOverallAttendanceFilters):HttpParams{let p=new HttpParams().set('studyYear',String(filters.studyYear)).set('period',filters.period).set('date',filters.date).set('page',String(filters.page||0)).set('size',String(filters.size||20));if(filters.query)p=p.set('query',filters.query);return p}
-  private previewRange(period:AttendancePercentagePeriod,date:string){const [year,month,dayOfMonth]=date.split('-').map(Number);const reference=new Date(Date.UTC(year,month-1,dayOfMonth));if(period==='MONTH')return{from:`${date.slice(0,7)}-01`,to:new Date(Date.UTC(year,month,0)).toISOString().slice(0,10)};const day=(reference.getUTCDay()+6)%7;const from=new Date(reference);from.setUTCDate(reference.getUTCDate()-day);const to=new Date(from);to.setUTCDate(from.getUTCDate()+6);return{from:from.toISOString().slice(0,10),to:to.toISOString().slice(0,10)}}
-  private previewOverallRange(period:StudentAttendancePeriod,date:string){return period==='ALL'?{from:'1970-01-01',to:date}:this.previewRange(period,date)}
-  private page<T>(all:T[],page:number,size:number):PageResponse<T>{return{content:all.slice(page*size,page*size+size),page,size,totalElements:all.length,totalPages:Math.ceil(all.length/size),first:page===0,last:(page+1)*size>=all.length}}
+const PREVIEW_REPORT_RECORDS: AttendanceRecord[] = PREVIEW_REPORT_SESSIONS.slice(0, 3).map(
+  (session, index) => ({
+    id: `preview-attendance-${index + 1}`,
+    studentId: 'preview-student',
+    studentName: 'Mia Anderson',
+    studentNumber: 'STU-001',
+    courseId: 'c1',
+    courseCode: 'CSE-2103',
+    courseName: 'Programming Fundamentals',
+    sessionId: session.id,
+    attendanceTime: session.endTime,
+    status: 'PRESENT',
+    similarityScore: 0.97,
+    verifiedAt: session.endTime,
+  }),
+);
+@Injectable({ providedIn: 'root' })
+export class AttendanceAdminService {
+  private http = inject(HttpClient);
+  private auth = inject(AuthService);
+  private previewSessions = signal([...PREVIEW_REPORT_SESSIONS, ...PREVIEW_SESSIONS]);
+  sessions(filters: AttendanceFilters = {}): Observable<PageResponse<AttendanceSession>> {
+    if (this.auth.isPreview()) {
+      const rows = this.previewSessions().filter(
+        (x) =>
+          (!filters.courseId || x.courseId === filters.courseId) &&
+          (!filters.teacherId || x.teacherId === filters.teacherId) &&
+          (!filters.date || x.sessionDate === filters.date) &&
+          (!filters.status || x.status === filters.status),
+      );
+      return of(this.page(rows, filters.page || 0, filters.size || 100));
+    }
+    return this.http.get<PageResponse<AttendanceSession>>(
+      `${environment.apiUrl}/attendance-sessions`,
+      { params: this.params(filters) },
+    );
+  }
+  createSession(body: SessionPayload, idempotencyKey?: string): Observable<AttendanceSession> {
+    if (this.auth.isPreview()) {
+      const x: AttendanceSession = {
+        id: crypto.randomUUID(),
+        ...body,
+        courseCode: 'PREVIEW',
+        courseName: 'Preview Course',
+        teacherId: '',
+        teacherUserId: '',
+        teacherName: 'Preview Teacher',
+        status: 'SCHEDULED',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      this.previewSessions.update((v) => [x, ...v]);
+      return of(x);
+    }
+    return this.http.post<AttendanceSession>(`${environment.apiUrl}/attendance-sessions`, body, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {},
+    });
+  }
+  updateSession(id: string, body: SessionPayload): Observable<AttendanceSession> {
+    if (this.auth.isPreview()) {
+      const old = this.previewSessions().find((x) => x.id === id)!;
+      const x = { ...old, ...body };
+      this.previewSessions.update((v) => v.map((y) => (y.id === id ? x : y)));
+      return of(x);
+    }
+    return this.http.put<AttendanceSession>(
+      `${environment.apiUrl}/attendance-sessions/${id}`,
+      body,
+    );
+  }
+  action(id: string, action: 'start' | 'close' | 'cancel'): Observable<AttendanceSession> {
+    if (this.auth.isPreview()) {
+      const status = action === 'start' ? 'ACTIVE' : action === 'close' ? 'CLOSED' : 'CANCELLED';
+      const old = this.previewSessions().find((x) => x.id === id)!;
+      const x = { ...old, status } as AttendanceSession;
+      this.previewSessions.update((v) => v.map((y) => (y.id === id ? x : y)));
+      return of(x);
+    }
+    return this.http.post<AttendanceSession>(
+      `${environment.apiUrl}/attendance-sessions/${id}/${action}`,
+      {},
+    );
+  }
+  deleteSession(id: string): Observable<void> {
+    if (this.auth.isPreview()) {
+      this.previewSessions.update((v) => v.filter((x) => x.id !== id));
+      return of(undefined);
+    }
+    return this.http.delete<void>(`${environment.apiUrl}/attendance-sessions/${id}`);
+  }
+  records(filters: AttendanceFilters = {}): Observable<PageResponse<AttendanceRecord>> {
+    if (this.auth.isPreview()) {
+      const rows = PREVIEW_REPORT_RECORDS.filter(
+        (x) =>
+          (!filters.courseId || x.courseId === filters.courseId) &&
+          (!filters.studentId || x.studentId === filters.studentId) &&
+          (!filters.sessionId || x.sessionId === filters.sessionId),
+      );
+      return of(this.page(rows, filters.page || 0, filters.size || 100));
+    }
+    return this.http.get<PageResponse<AttendanceRecord>>(`${environment.apiUrl}/attendance`, {
+      params: this.params(filters),
+    });
+  }
+  allSessions(filters: AttendanceFilters = {}): Observable<AttendanceSession[]> {
+    return this.sessions({ ...filters, page: 0, size: 100 }).pipe(
+      expand((page) =>
+        page.last ? EMPTY : this.sessions({ ...filters, page: page.page + 1, size: 100 }),
+      ),
+      reduce((all, page) => [...all, ...page.content], [] as AttendanceSession[]),
+    );
+  }
+  allRecords(filters: AttendanceFilters = {}): Observable<AttendanceRecord[]> {
+    return this.records({ ...filters, page: 0, size: 100 }).pipe(
+      expand((page) =>
+        page.last ? EMPTY : this.records({ ...filters, page: page.page + 1, size: 100 }),
+      ),
+      reduce((all, page) => [...all, ...page.content], [] as AttendanceRecord[]),
+    );
+  }
+  record(id: string): Observable<AttendanceRecord> {
+    return this.http.get<AttendanceRecord>(`${environment.apiUrl}/attendance/${id}`);
+  }
+  report(filters: AttendanceFilters = {}): Observable<AttendanceReport> {
+    if (this.auth.isPreview()) {
+      const records = this.page<AttendanceRecord>([], 0, 50);
+      return of({
+        totalRecords: 47,
+        expectedAttendance: 50,
+        attendanceRate: 94,
+        generatedAt: new Date().toISOString(),
+        records,
+      });
+    }
+    return this.http.get<AttendanceReport>(`${environment.apiUrl}/reports/attendance`, {
+      params: this.params(filters),
+    });
+  }
+  export(format: 'pdf' | 'excel', filters: AttendanceFilters): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${environment.apiUrl}/reports/attendance/export/${format}`, {
+      params: this.params(filters),
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
+  studentPercentages(
+    filters: StudentPercentageFilters,
+  ): Observable<StudentAttendancePercentageReport> {
+    if (this.auth.isPreview()) {
+      const rows = [
+        {
+          studentId: 'preview-student',
+          studentUserId: 'preview-user',
+          studentNumber: 'STU-001',
+          studyYear: 2,
+          studentName: 'Mia Anderson',
+          courseId: 'c1',
+          courseCode: 'CSE-2103',
+          courseName: 'Programming Fundamentals',
+          totalSessions: 12,
+          presentSessions: 9,
+          absentSessions: 3,
+          attendancePercentage: 75,
+        },
+      ];
+      const range = this.previewRange(filters.period, filters.date);
+      return of({
+        period: filters.period,
+        referenceDate: filters.date,
+        from: range.from,
+        to: range.to,
+        generatedAt: new Date().toISOString(),
+        students: this.page(
+          rows.filter(
+            (x) =>
+              (!filters.courseId || x.courseId === filters.courseId) &&
+              (!filters.studyYear || x.studyYear === filters.studyYear),
+          ),
+          filters.page || 0,
+          filters.size || 20,
+        ),
+      });
+    }
+    return this.http.get<StudentAttendancePercentageReport>(
+      `${environment.apiUrl}/reports/attendance/students`,
+      { params: this.percentageParams(filters, true) },
+    );
+  }
+  exportStudentPercentages(
+    format: 'pdf' | 'excel',
+    filters: StudentPercentageFilters,
+  ): Observable<HttpResponse<Blob>> {
+    const accept =
+      format === 'pdf'
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    return this.http.get(`${environment.apiUrl}/reports/attendance/students/export/${format}`, {
+      params: this.percentageParams(filters, false),
+      headers: { Accept: accept },
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
+  studentOverallAttendance(
+    filters: TeacherOverallAttendanceFilters,
+  ): Observable<TeacherCohortAttendanceReport> {
+    if (this.auth.isPreview()) {
+      const rows: TeacherStudentOverallAttendance[] = [
+        {
+          studentId: 'overall-1',
+          studentUserId: 'overall-user-1',
+          studentNumber: 'VMC-1',
+          studentName: 'Honey Soe',
+          email: 'honey.soe@example.edu',
+          studyYear: 5,
+          courseCount: 5,
+          overallAttendancePercentage: 91.67,
+          totalEligibleRollCalls: 60,
+          totalPresentRollCalls: 55,
+          totalAbsentRollCalls: 5,
+        },
+        {
+          studentId: 'overall-2',
+          studentUserId: 'overall-user-2',
+          studentNumber: 'VMC-11',
+          studentName: 'Paing Swan Pyae',
+          email: 'paing.swan@example.edu',
+          studyYear: 5,
+          courseCount: 5,
+          overallAttendancePercentage: 78.33,
+          totalEligibleRollCalls: 60,
+          totalPresentRollCalls: 47,
+          totalAbsentRollCalls: 13,
+        },
+        {
+          studentId: 'overall-3',
+          studentUserId: 'overall-user-3',
+          studentNumber: 'VMC-14',
+          studentName: 'Zay Nyi Nyi Soe',
+          email: 'zay.nyi@example.edu',
+          studyYear: 5,
+          courseCount: 4,
+          overallAttendancePercentage: 62.5,
+          totalEligibleRollCalls: 48,
+          totalPresentRollCalls: 30,
+          totalAbsentRollCalls: 18,
+        },
+        {
+          studentId: 'overall-4',
+          studentUserId: 'overall-user-4',
+          studentNumber: 'VMC-2',
+          studentName: 'Hsue Ei Hlaing',
+          email: 'hsue.ei@example.edu',
+          studyYear: 5,
+          courseCount: 5,
+          overallAttendancePercentage: 45,
+          totalEligibleRollCalls: 60,
+          totalPresentRollCalls: 27,
+          totalAbsentRollCalls: 33,
+        },
+      ];
+      const query = filters.query?.trim().toLowerCase();
+      const matching = rows.filter(
+        (x) =>
+          x.studyYear === filters.studyYear &&
+          (!query ||
+            `${x.studentName} ${x.studentNumber} ${x.email}`.toLowerCase().includes(query)),
+      );
+      const range = this.previewOverallRange(filters.period, filters.date);
+      return of({
+        teacherId: 'preview-teacher',
+        departmentId: 'preview-department',
+        departmentCode: 'MECH',
+        departmentName: 'Mechatronics',
+        studyYear: filters.studyYear,
+        period: filters.period,
+        referenceDate: filters.date,
+        from: range.from,
+        to: range.to,
+        generatedAt: new Date().toISOString(),
+        calculationMethod: "Arithmetic mean across each student's actual enrolled course count",
+        students: this.page(matching, filters.page || 0, filters.size || 20),
+      }).pipe(delay(450));
+    }
+    return this.http.get<TeacherCohortAttendanceReport>(
+      `${environment.apiUrl}/reports/attendance/students/overall`,
+      { params: this.overallParams(filters) },
+    );
+  }
+  private params(filters: AttendanceFilters): HttpParams {
+    let p = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') p = p.set(k, String(v));
+    });
+    if (!p.has('page')) p = p.set('page', '0');
+    if (!p.has('size')) p = p.set('size', '100');
+    return p;
+  }
+  private percentageParams(filters: StudentPercentageFilters, paged: boolean): HttpParams {
+    let p = new HttpParams().set('period', filters.period).set('date', filters.date);
+    if (filters.courseId) p = p.set('courseId', filters.courseId);
+    if (filters.studyYear) p = p.set('studyYear', filters.studyYear);
+    if (filters.query) p = p.set('query', filters.query);
+    if (paged) p = p.set('page', String(filters.page || 0)).set('size', String(filters.size || 20));
+    return p;
+  }
+  private overallParams(filters: TeacherOverallAttendanceFilters): HttpParams {
+    let p = new HttpParams()
+      .set('studyYear', String(filters.studyYear))
+      .set('period', filters.period)
+      .set('date', filters.date)
+      .set('page', String(filters.page || 0))
+      .set('size', String(filters.size || 20));
+    if (filters.query) p = p.set('query', filters.query);
+    return p;
+  }
+  private previewRange(period: AttendancePercentagePeriod, date: string) {
+    const [year, month, dayOfMonth] = date.split('-').map(Number);
+    const reference = new Date(Date.UTC(year, month - 1, dayOfMonth));
+    if (period === 'MONTH')
+      return {
+        from: `${date.slice(0, 7)}-01`,
+        to: new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10),
+      };
+    const day = (reference.getUTCDay() + 6) % 7;
+    const from = new Date(reference);
+    from.setUTCDate(reference.getUTCDate() - day);
+    const to = new Date(from);
+    to.setUTCDate(from.getUTCDate() + 6);
+    return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  }
+  private previewOverallRange(period: StudentAttendancePeriod, date: string) {
+    return period === 'ALL' ? { from: '1970-01-01', to: date } : this.previewRange(period, date);
+  }
+  private page<T>(all: T[], page: number, size: number): PageResponse<T> {
+    return {
+      content: all.slice(page * size, page * size + size),
+      page,
+      size,
+      totalElements: all.length,
+      totalPages: Math.ceil(all.length / size),
+      first: page === 0,
+      last: (page + 1) * size >= all.length,
+    };
+  }
 }

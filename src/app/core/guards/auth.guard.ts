@@ -8,11 +8,11 @@ export const authGuard: CanActivateFn = () => {
   return auth.isAuthenticated() ? true : inject(Router).createUrlTree(['/login']);
 };
 
-export const roleGuard: CanActivateFn = route => {
+export const roleGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService);
   const roles = (route.data['roles'] ?? []) as Role[];
   if (!auth.isAuthenticated()) return inject(Router).createUrlTree(['/login']);
-  if (roles.some(role => auth.hasRole(role))) return true;
+  if (roles.some((role) => auth.hasRole(role))) return true;
   const fallback = auth.hasRole('ADMIN')
     ? '/admin/dashboard'
     : auth.hasRole('TEACHER')

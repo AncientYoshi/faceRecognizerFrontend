@@ -50,7 +50,9 @@
     <div class="loading-notice" role="status" aria-live="polite">
       <span class="loading-spinner"></span>
       <div>
-        <strong>{{ report() ? 'Updating attendance records…' : 'Loading overall attendance…' }}</strong>
+        <strong>{{
+          report() ? 'Updating attendance records…' : 'Loading overall attendance…'
+        }}</strong>
         <small>Please wait while the latest report is retrieved.</small>
       </div>
     </div>

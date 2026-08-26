@@ -22,7 +22,10 @@
         <dl>
           <dt>{{ role === 'TEACHER' ? 'Employee number' : 'Roll number' }}</dt>
           <dd>{{ role === 'TEACHER' ? u.employeeNumber : u.studentNumber }}</dd>
-          @if (role === 'STUDENT') {<dt>Study year</dt><dd>Year {{ u.studyYear }}</dd>}
+          @if (role === 'STUDENT') {
+            <dt>Study year</dt>
+            <dd>Year {{ u.studyYear }}</dd>
+          }
         </dl>
         <footer>
           <button (click)="open(u)"><sam-icon name="settings" />Edit</button
@@ -52,11 +55,17 @@
           >{{ editing() ? 'New password (optional)' : 'Password'
           }}<input formControlName="password" type="password" /></label
         ><label
-          >{{ role === 'TEACHER' ? 'Employee number' : 'Roll number' }}<input
-            formControlName="reference"
+          >{{ role === 'TEACHER' ? 'Employee number' : 'Roll number'
+          }}<input formControlName="reference"
         /></label>
         @if (role === 'STUDENT') {
-          <label>Study year<select formControlName="studyYear">@for(year of [1,2,3,4,5,6];track year){<option [value]="year">Year {{year}}</option>}</select></label>
+          <label
+            >Study year<select formControlName="studyYear">
+              @for (year of [1, 2, 3, 4, 5, 6]; track year) {
+                <option [value]="year">Year {{ year }}</option>
+              }
+            </select></label
+          >
         }
         @if (editing()) {
           <label class="check"

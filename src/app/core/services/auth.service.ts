@@ -1,9 +1,26 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { EMPTY, Observable, catchError, concat, finalize, of, shareReplay, switchMap, tap } from 'rxjs';
+import {
+  EMPTY,
+  Observable,
+  catchError,
+  concat,
+  finalize,
+  of,
+  shareReplay,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, CurrentUser, PublicDepartment, RegisterUserPayload, RegisterUserResponse, Role } from '../models/api.models';
+import {
+  AuthResponse,
+  CurrentUser,
+  PublicDepartment,
+  RegisterUserPayload,
+  RegisterUserResponse,
+  Role,
+} from '../models/api.models';
 
 const ACCESS_KEY = 'sam_access_token';
 const REFRESH_KEY = 'sam_refresh_token';
@@ -28,15 +45,21 @@ export class AuthService {
   readonly isAuthenticated = computed(() => !!this.accessToken && !!this._user());
   readonly primaryRole = computed<Role | null>(() => this.roleOf(this._user()));
 
-  get accessToken(): string | null { return this.authStorage.getItem(ACCESS_KEY); }
-  get refreshToken(): string | null { return this.authStorage.getItem(REFRESH_KEY); }
+  get accessToken(): string | null {
+    return this.authStorage.getItem(ACCESS_KEY);
+  }
+  get refreshToken(): string | null {
+    return this.authStorage.getItem(REFRESH_KEY);
+  }
 
   login(email: string, password: string, rememberMe = false): Observable<CurrentUser> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password }).pipe(
-      tap(tokens => this.storeTokens(tokens, rememberMe)),
-      switchMap(() => this.http.get<CurrentUser>(`${environment.apiUrl}/me`)),
-      tap(user => this.storeUser(user)),
-    );
+    return this.http
+      .post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password })
+      .pipe(
+        tap((tokens) => this.storeTokens(tokens, rememberMe)),
+        switchMap(() => this.http.get<CurrentUser>(`${environment.apiUrl}/me`)),
+        tap((user) => this.storeUser(user)),
+      );
   }
 
   register(payload: RegisterUserPayload): Observable<RegisterUserResponse> {
@@ -51,9 +74,9 @@ export class AuthService {
   }
 
   refresh(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, { refreshToken: this.refreshToken }).pipe(
-      tap(tokens => this.storeTokens(tokens)),
-    );
+    return this.http
+      .post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, { refreshToken: this.refreshToken })
+      .pipe(tap((tokens) => this.storeTokens(tokens)));
   }
 
   /** Enables UI review when the backend is not running. It never creates an API token. */
@@ -70,7 +93,12 @@ export class AuthService {
     this.selectAuthStorage(true);
     this.authStorage.setItem(ACCESS_KEY, 'preview-token');
     this.storeUser(user);
-    const path = role === 'ADMIN' ? '/admin/dashboard' : role === 'TEACHER' ? '/admin/teacher-dashboard' : '/student/dashboard';
+    const path =
+      role === 'ADMIN'
+        ? '/admin/dashboard'
+        : role === 'TEACHER'
+          ? '/admin/teacher-dashboard'
+          : '/student/dashboard';
     this.router.navigateByUrl(path);
   }
 
@@ -78,12 +106,13 @@ export class AuthService {
     const refreshToken = this.refreshToken;
     const finish = () => this.expireSession();
     if (refreshToken && this.accessToken !== 'preview-token') {
-      this.http.post(`${environment.apiUrl}/auth/logout`, { refreshToken }).subscribe({ next: finish, error: finish });
+      this.http
+        .post(`${environment.apiUrl}/auth/logout`, { refreshToken })
+        .subscribe({ next: finish, error: finish });
     } else {
       finish();
     }
   }
-
 
   expireSession(): void {
     this.clearAuthStorage(localStorage);
@@ -94,15 +123,23 @@ export class AuthService {
 
   roleOf(user: Pick<CurrentUser, 'roles'> | null | undefined): Role | null {
     if (!user) return null;
-    return user.roles.includes('ADMIN') ? 'ADMIN' : user.roles[0] ?? null;
+    return user.roles.includes('ADMIN') ? 'ADMIN' : (user.roles[0] ?? null);
   }
 
   homeFor(role = this.primaryRole()): string {
-    return role === 'ADMIN' ? '/admin/dashboard' : role === 'TEACHER' ? '/admin/teacher-dashboard' : '/student/dashboard';
+    return role === 'ADMIN'
+      ? '/admin/dashboard'
+      : role === 'TEACHER'
+        ? '/admin/teacher-dashboard'
+        : '/student/dashboard';
   }
 
-  hasRole(role: Role): boolean { return this.primaryRole() === role; }
-  isPreview(): boolean { return this.accessToken === 'preview-token'; }
+  hasRole(role: Role): boolean {
+    return this.primaryRole() === role;
+  }
+  isPreview(): boolean {
+    return this.accessToken === 'preview-token';
+  }
 
   private storeTokens(tokens: AuthResponse, rememberMe?: boolean): void {
     if (rememberMe !== undefined) this.selectAuthStorage(rememberMe);
@@ -116,8 +153,11 @@ export class AuthService {
   }
 
   private readUser(): CurrentUser | null {
-    try { return JSON.parse(this.authStorage.getItem(USER_KEY) || 'null'); }
-    catch { return null; }
+    try {
+      return JSON.parse(this.authStorage.getItem(USER_KEY) || 'null');
+    } catch {
+      return null;
+    }
   }
 
   private initialAuthStorage(): Storage {
@@ -138,11 +178,13 @@ export class AuthService {
 
   private refreshDepartments(): Observable<PublicDepartment[]> {
     if (this.departmentRefresh$) return this.departmentRefresh$;
-    this.departmentRefresh$ = this.http.get<PublicDepartment[]>(`${environment.apiUrl}/public/departments`).pipe(
-      tap(departments => this.storeDepartments(departments)),
-      finalize(() => this.departmentRefresh$ = null),
-      shareReplay({ bufferSize: 1, refCount: false }),
-    );
+    this.departmentRefresh$ = this.http
+      .get<PublicDepartment[]>(`${environment.apiUrl}/public/departments`)
+      .pipe(
+        tap((departments) => this.storeDepartments(departments)),
+        finalize(() => (this.departmentRefresh$ = null)),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
     return this.departmentRefresh$;
   }
 
@@ -151,17 +193,22 @@ export class AuthService {
     try {
       const cache: PublicDepartmentCache = { savedAt: new Date().toISOString(), departments };
       localStorage.setItem(DEPARTMENTS_KEY, JSON.stringify(cache));
-    } catch { /* Browsers may disable storage; the in-memory cache still works. */ }
+    } catch {
+      /* Browsers may disable storage; the in-memory cache still works. */
+    }
   }
 
   private readDepartments(): PublicDepartment[] | null {
     try {
-      const cache = JSON.parse(localStorage.getItem(DEPARTMENTS_KEY) || 'null') as PublicDepartmentCache | null;
+      const cache = JSON.parse(
+        localStorage.getItem(DEPARTMENTS_KEY) || 'null',
+      ) as PublicDepartmentCache | null;
       if (!cache || !Array.isArray(cache.departments)) return null;
-      const valid = cache.departments.every(department =>
-        typeof department?.id === 'string' &&
-        typeof department?.code === 'string' &&
-        typeof department?.name === 'string'
+      const valid = cache.departments.every(
+        (department) =>
+          typeof department?.id === 'string' &&
+          typeof department?.code === 'string' &&
+          typeof department?.name === 'string',
       );
       return valid ? cache.departments : null;
     } catch {

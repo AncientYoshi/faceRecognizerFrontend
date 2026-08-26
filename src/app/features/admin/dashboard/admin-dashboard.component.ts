@@ -18,10 +18,22 @@ export class AdminDashboardComponent implements OnInit {
   readonly loading = signal(true);
 
   ngOnInit(): void {
-    this.service.getAdminDashboard().subscribe(data => { this.dashboard.set(data); this.loading.set(false); });
+    this.service.getAdminDashboard().subscribe((data) => {
+      this.dashboard.set(data);
+      this.loading.set(false);
+    });
   }
 
-  initials(first: string, last: string): string { return `${first?.[0] ?? ''}${last?.[0] ?? ''}`.toUpperCase(); }
-  totalDepartmentValue(): number { return this.dashboard().departmentStatistics.reduce((total, d) => total + d.attendanceRecords, 0) || 1; }
-  deptPercent(value: number): number { return Math.round(value / this.totalDepartmentValue() * 100); }
+  initials(first: string, last: string): string {
+    return `${first?.[0] ?? ''}${last?.[0] ?? ''}`.toUpperCase();
+  }
+  totalDepartmentValue(): number {
+    return (
+      this.dashboard().departmentStatistics.reduce((total, d) => total + d.attendanceRecords, 0) ||
+      1
+    );
+  }
+  deptPercent(value: number): number {
+    return Math.round((value / this.totalDepartmentValue()) * 100);
+  }
 }

@@ -267,10 +267,7 @@
   width: 115px;
   height: 115px;
   border-radius: 50%;
-  background: conic-gradient(
-    #0b9bd2 0 var(--attendance, 0%),
-    #e9f0f5 var(--attendance, 0%)
-  );
+  background: conic-gradient(#0b9bd2 0 var(--attendance, 0%), #e9f0f5 var(--attendance, 0%));
   position: relative;
 }
 .progress-ring:before {

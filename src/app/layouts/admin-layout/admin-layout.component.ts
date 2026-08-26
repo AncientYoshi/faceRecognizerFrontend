@@ -16,5 +16,7 @@ export class AdminLayoutComponent {
   readonly sidebarOpen = signal(false);
   readonly now = new Date();
 
-  closeSidebar(): void { this.sidebarOpen.set(false); }
+  closeSidebar(): void {
+    this.sidebarOpen.set(false);
+  }
 }

@@ -101,16 +101,15 @@ export class AdminPeopleComponent implements OnInit {
   remove(u: UserSummary) {
     if (!confirm(`Delete ${u.firstName} ${u.lastName}?`)) return;
     this.deleteError.set('');
-    this.api
-      .delete(u.id)
-      .subscribe({
-        next: () => this.load(),
-        error: (e) => this.deleteError.set(this.message(e, 'Could not delete user.')),
-      });
+    this.api.delete(u.id).subscribe({
+      next: () => this.load(),
+      error: (e) => this.deleteError.set(this.message(e, 'Could not delete user.')),
+    });
   }
 
   private message(error: any, fallback: string): string {
-    if (error.status === 0) return 'Cannot reach the Smart Attendance API. Please check your connection.';
+    if (error.status === 0)
+      return 'Cannot reach the Smart Attendance API. Please check your connection.';
     let body = error.error;
     if (typeof body === 'string') {
       try {

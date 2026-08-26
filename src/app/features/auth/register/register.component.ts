@@ -1,7 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { PublicDepartment, RegisterUserResponse, SelfRegistrationRole } from '../../../core/models/api.models';
+import {
+  PublicDepartment,
+  RegisterUserResponse,
+  SelfRegistrationRole,
+} from '../../../core/models/api.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 
@@ -37,19 +41,24 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     this.auth.publicDepartments().subscribe({
-      next: departments => {
+      next: (departments) => {
         this.departments.set(departments);
         const selectedDepartment = this.form.controls.departmentId.value;
-        if (selectedDepartment && !departments.some(department => department.id === selectedDepartment)) {
+        if (
+          selectedDepartment &&
+          !departments.some((department) => department.id === selectedDepartment)
+        ) {
           this.form.controls.departmentId.setValue('');
         } else if (!selectedDepartment && departments.length === 1) {
           this.form.controls.departmentId.setValue(departments[0].id);
         }
         this.loadingDepartments.set(false);
       },
-      error: error => {
+      error: (error) => {
         this.loadingDepartments.set(false);
-        this.error.set(this.message(error, 'Could not load departments. Please refresh and try again.'));
+        this.error.set(
+          this.message(error, 'Could not load departments. Please refresh and try again.'),
+        );
       },
     });
   }
@@ -79,26 +88,28 @@ export class RegisterComponent implements OnInit {
     const referenceNumber = value.referenceNumber.trim();
     this.loading.set(true);
     this.error.set('');
-    this.auth.register({
-      email: value.email.trim().toLowerCase(),
-      password: value.password,
-      firstName: value.firstName.trim(),
-      lastName: value.lastName.trim(),
-      role: value.role,
-      studentNumber: value.role === 'STUDENT' ? referenceNumber : null,
-      studyYear: value.role === 'STUDENT' ? Number(value.studyYear) : null,
-      employeeNumber: value.role === 'TEACHER' ? referenceNumber : null,
-      departmentId: value.departmentId,
-    }).subscribe({
-      next: response => {
-        this.loading.set(false);
-        this.success.set(response);
-      },
-      error: error => {
-        this.loading.set(false);
-        this.error.set(this.message(error, 'Could not create your account. Please try again.'));
-      },
-    });
+    this.auth
+      .register({
+        email: value.email.trim().toLowerCase(),
+        password: value.password,
+        firstName: value.firstName.trim(),
+        lastName: value.lastName.trim(),
+        role: value.role,
+        studentNumber: value.role === 'STUDENT' ? referenceNumber : null,
+        studyYear: value.role === 'STUDENT' ? Number(value.studyYear) : null,
+        employeeNumber: value.role === 'TEACHER' ? referenceNumber : null,
+        departmentId: value.departmentId,
+      })
+      .subscribe({
+        next: (response) => {
+          this.loading.set(false);
+          this.success.set(response);
+        },
+        error: (error) => {
+          this.loading.set(false);
+          this.error.set(this.message(error, 'Could not create your account. Please try again.'));
+        },
+      });
   }
 
   referenceLabel(): string {
@@ -110,9 +121,14 @@ export class RegisterComponent implements OnInit {
   }
 
   private message(error: any, fallback: string): string {
-    if (error.status === 0) return 'Cannot reach the Smart Attendance API. Please check your connection.';
+    if (error.status === 0)
+      return 'Cannot reach the Smart Attendance API. Please check your connection.';
     const details = error.error?.errors;
-    if (Array.isArray(details) && details.length) return details.map((item: any) => item.message ?? item.defaultMessage).filter(Boolean).join(' ');
+    if (Array.isArray(details) && details.length)
+      return details
+        .map((item: any) => item.message ?? item.defaultMessage)
+        .filter(Boolean)
+        .join(' ');
     return error.error?.message || error.error?.detail || fallback;
   }
 }

@@ -25,20 +25,30 @@ export class LoginComponent {
   });
 
   submit(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    this.loading.set(true); this.error.set('');
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.loading.set(true);
+    this.error.set('');
     const { email, password, rememberMe } = this.form.getRawValue();
     this.auth.login(email, password, rememberMe).subscribe({
-      next: user => {
+      next: (user) => {
         this.loading.set(false);
         this.router.navigateByUrl(this.auth.homeFor(this.auth.roleOf(user)));
       },
-      error: err => {
+      error: (err) => {
         this.loading.set(false);
-        this.error.set(err.status === 0 ? 'Cannot reach the Smart Attendance API. Please check your connection.' : (err.error?.message || 'Incorrect email or password.'));
+        this.error.set(
+          err.status === 0
+            ? 'Cannot reach the Smart Attendance API. Please check your connection.'
+            : err.error?.message || 'Incorrect email or password.',
+        );
       },
     });
   }
 
-  preview(role: 'ADMIN' | 'TEACHER' | 'STUDENT'): void { this.auth.enterPreview(role); }
+  preview(role: 'ADMIN' | 'TEACHER' | 'STUDENT'): void {
+    this.auth.enterPreview(role);
+  }
 }

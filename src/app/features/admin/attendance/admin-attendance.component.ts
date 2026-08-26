@@ -53,7 +53,9 @@ export class AdminAttendanceComponent implements OnInit {
       : this.mode === 'records'
         ? 'Attendance Records'
         : this.mode === 'reports'
-          ? this.auth.hasRole('TEACHER') ? 'Student Attendance Record' : 'Reports'
+          ? this.auth.hasRole('TEACHER')
+            ? 'Student Attendance Record'
+            : 'Reports'
           : 'Analytics';
   readonly sessions = signal<AttendanceSession[]>([]);
   readonly records = signal<AttendanceRecord[]>([]);
@@ -102,27 +104,27 @@ export class AdminAttendanceComponent implements OnInit {
         next: (x) => {
           this.teacherId.set(x.teacherId);
           const summaries: Course[] = x.myCourses.map((c) => ({
-              id: c.courseId,
-              code: c.courseCode,
-              name: c.courseName,
-              semester: '',
-              academicYear: '',
-              studyYear: 1,
-              departmentId: '',
-              departmentCode: '',
-              departmentName: '',
-              teacherId: x.teacherId,
-              teacherUserId: '',
-              teacherName: x.teacherName,
-              enrollmentCount: c.enrolledStudents,
-              createdAt: '',
-              updatedAt: '',
-            }));
+            id: c.courseId,
+            code: c.courseCode,
+            name: c.courseName,
+            semester: '',
+            academicYear: '',
+            studyYear: 1,
+            departmentId: '',
+            departmentCode: '',
+            departmentName: '',
+            teacherId: x.teacherId,
+            teacherUserId: '',
+            teacherName: x.teacherName,
+            enrollmentCount: c.enrolledStudents,
+            createdAt: '',
+            updatedAt: '',
+          }));
           this.courses.set(summaries);
-          this.academics.courses('',0,100,{teacherId:x.teacherId}).subscribe({
-            next: result => {
-              const assigned = new Set(x.myCourses.map(course => course.courseId));
-              const courses = result.content.filter(course => assigned.has(course.id));
+          this.academics.courses('', 0, 100, { teacherId: x.teacherId }).subscribe({
+            next: (result) => {
+              const assigned = new Set(x.myCourses.map((course) => course.courseId));
+              const courses = result.content.filter((course) => assigned.has(course.id));
               this.courses.set(courses.length ? courses : summaries);
               this.selectInitialReportCourse();
               this.load();
@@ -145,7 +147,7 @@ export class AdminAttendanceComponent implements OnInit {
     }
   }
   selectCourse(courseId: string) {
-    const course = this.courses().find(item => item.id === courseId);
+    const course = this.courses().find((item) => item.id === courseId);
     this.filter.patchValue({
       courseId,
       studyYear: course?.studyYear ? String(course.studyYear) : '',
@@ -181,8 +183,7 @@ export class AdminAttendanceComponent implements OnInit {
       if (this.auth.hasRole('TEACHER')) {
         this.percentagePage.set(0);
         this.loadStudentPercentages();
-      }
-      else
+      } else
         this.api.report({ ...this.reportFilters(), page: 0, size: 100 }).subscribe({
           next: (x) => {
             this.report.set(x);
@@ -191,8 +192,7 @@ export class AdminAttendanceComponent implements OnInit {
           },
           error: (e) => this.fail(e),
         });
-    }
-    else
+    } else
       this.dashboards.getAdminDashboard().subscribe({
         next: (x) => {
           this.analytics.set(x);
@@ -300,10 +300,18 @@ export class AdminAttendanceComponent implements OnInit {
     return this.presentRollCalls().has(`${column.sessionId}:${studentId}`) ? 'P' : 'A';
   }
   selectedCourseInfo() {
-    return this.courses().find(course => course.id === this.filter.controls.courseId.value);
+    return this.courses().find((course) => course.id === this.filter.controls.courseId.value);
   }
   studyYearLabel(year: number | string | undefined) {
-    const labels = ['','First Year','Second Year','Third Year','Fourth Year','Fifth Year','Sixth Year'];
+    const labels = [
+      '',
+      'First Year',
+      'Second Year',
+      'Third Year',
+      'Fourth Year',
+      'Fifth Year',
+      'Sixth Year',
+    ];
     return labels[Number(year)] || 'Unassigned';
   }
   private clean(): AttendanceFilters {
@@ -355,26 +363,35 @@ export class AdminAttendanceComponent implements OnInit {
       next: ({ sessions, records }) => {
         const now = Date.now();
         const eligible = sessions
-          .filter(session =>
-            session.sessionDate >= report.from &&
-            session.sessionDate <= report.to &&
-            session.status !== 'CANCELLED' &&
-            new Date(session.startTime).getTime() <= now &&
-            (session.status === 'CLOSED' || new Date(session.endTime).getTime() <= now))
-          .sort((a,b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-        this.rollCallColumns.set(eligible.flatMap(session =>
-          Array.from({length: session.rollCallCount}, (_,index) => ({
-            sessionId: session.id,
-            sessionDate: session.sessionDate,
-            callNumber: index + 1,
-          }))));
-        const sessionIds = new Set(eligible.map(session => session.id));
-        this.presentRollCalls.set(new Set(records
-          .filter(record => sessionIds.has(record.sessionId) && record.status === 'PRESENT')
-          .map(record => `${record.sessionId}:${record.studentId}`)));
+          .filter(
+            (session) =>
+              session.sessionDate >= report.from &&
+              session.sessionDate <= report.to &&
+              session.status !== 'CANCELLED' &&
+              new Date(session.startTime).getTime() <= now &&
+              (session.status === 'CLOSED' || new Date(session.endTime).getTime() <= now),
+          )
+          .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+        this.rollCallColumns.set(
+          eligible.flatMap((session) =>
+            Array.from({ length: session.rollCallCount }, (_, index) => ({
+              sessionId: session.id,
+              sessionDate: session.sessionDate,
+              callNumber: index + 1,
+            })),
+          ),
+        );
+        const sessionIds = new Set(eligible.map((session) => session.id));
+        this.presentRollCalls.set(
+          new Set(
+            records
+              .filter((record) => sessionIds.has(record.sessionId) && record.status === 'PRESENT')
+              .map((record) => `${record.sessionId}:${record.studentId}`),
+          ),
+        );
         this.loading.set(false);
       },
-      error: error => this.fail(error),
+      error: (error) => this.fail(error),
     });
   }
   private selectInitialReportCourse() {

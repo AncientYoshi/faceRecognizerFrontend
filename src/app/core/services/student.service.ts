@@ -21,10 +21,74 @@ const PREVIEW_PROFILE: StudentProfile = {
 };
 
 const PREVIEW_COURSES: Course[] = [
-  { id: '1', code: 'ME 51021', name: 'Robotic Analysis', semester: 'FIRST', academicYear: '2026-2027', studyYear: 5, departmentId: 'me', departmentCode: 'ME', departmentName: 'Mechanical Engineering', teacherId: '1', teacherUserId: '1', teacherName: 'Daw Aye', enrollmentCount: 34, createdAt: '', updatedAt: '' },
-  { id: '2', code: 'CE 4102', name: 'Structural Design', semester: 'FIRST', academicYear: '2026-2027', studyYear: 4, departmentId: 'ce', departmentCode: 'CE', departmentName: 'Civil Engineering', teacherId: '2', teacherUserId: '2', teacherName: 'Mg Mg', enrollmentCount: 41, createdAt: '', updatedAt: '' },
-  { id: '3', code: 'CSE 2103', name: 'Programming Fundamentals', semester: 'FIRST', academicYear: '2026-2027', studyYear: 2, departmentId: 'cse', departmentCode: 'CSE', departmentName: 'Computer Science and Engineering', teacherId: '3', teacherUserId: '3', teacherName: 'Hsu Hlaing', enrollmentCount: 52, createdAt: '', updatedAt: '' },
-  { id: '4', code: 'ECE 3101', name: 'Digital Electronics', semester: 'FIRST', academicYear: '2026-2027', studyYear: 3, departmentId: 'ece', departmentCode: 'ECE', departmentName: 'Electronic Engineering', teacherId: '4', teacherUserId: '4', teacherName: 'Khin Thandar', enrollmentCount: 38, createdAt: '', updatedAt: '' },
+  {
+    id: '1',
+    code: 'ME 51021',
+    name: 'Robotic Analysis',
+    semester: 'FIRST',
+    academicYear: '2026-2027',
+    studyYear: 5,
+    departmentId: 'me',
+    departmentCode: 'ME',
+    departmentName: 'Mechanical Engineering',
+    teacherId: '1',
+    teacherUserId: '1',
+    teacherName: 'Daw Aye',
+    enrollmentCount: 34,
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: '2',
+    code: 'CE 4102',
+    name: 'Structural Design',
+    semester: 'FIRST',
+    academicYear: '2026-2027',
+    studyYear: 4,
+    departmentId: 'ce',
+    departmentCode: 'CE',
+    departmentName: 'Civil Engineering',
+    teacherId: '2',
+    teacherUserId: '2',
+    teacherName: 'Mg Mg',
+    enrollmentCount: 41,
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: '3',
+    code: 'CSE 2103',
+    name: 'Programming Fundamentals',
+    semester: 'FIRST',
+    academicYear: '2026-2027',
+    studyYear: 2,
+    departmentId: 'cse',
+    departmentCode: 'CSE',
+    departmentName: 'Computer Science and Engineering',
+    teacherId: '3',
+    teacherUserId: '3',
+    teacherName: 'Hsu Hlaing',
+    enrollmentCount: 52,
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: '4',
+    code: 'ECE 3101',
+    name: 'Digital Electronics',
+    semester: 'FIRST',
+    academicYear: '2026-2027',
+    studyYear: 3,
+    departmentId: 'ece',
+    departmentCode: 'ECE',
+    departmentName: 'Electronic Engineering',
+    teacherId: '4',
+    teacherUserId: '4',
+    teacherName: 'Khin Thandar',
+    enrollmentCount: 38,
+    createdAt: '',
+    updatedAt: '',
+  },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -46,7 +110,7 @@ export class StudentService {
     }
     if (!this.profileRequest || force) {
       this.profileRequest = this.http.get<StudentProfile>(`${environment.apiUrl}/students/me`).pipe(
-        tap(profile => this._profile.set(profile)),
+        tap((profile) => this._profile.set(profile)),
         shareReplay({ bufferSize: 1, refCount: true }),
       );
     }
@@ -58,10 +122,12 @@ export class StudentService {
     if (this.auth.isPreview()) return of(this.page(PREVIEW_COURSES));
     if (!this.coursesRequest || force) {
       this.coursesRequest = this.getMyProfile(force).pipe(
-        switchMap(profile => this.http.get<PageResponse<Course>>(
-          `${environment.apiUrl}/students/${profile.studentId}/courses`,
-          { params: { page: 0, size: 100 } },
-        )),
+        switchMap((profile) =>
+          this.http.get<PageResponse<Course>>(
+            `${environment.apiUrl}/students/${profile.studentId}/courses`,
+            { params: { page: 0, size: 100 } },
+          ),
+        ),
         shareReplay({ bufferSize: 1, refCount: true }),
       );
     }
@@ -86,6 +152,14 @@ export class StudentService {
   }
 
   private page<T>(content: T[]): PageResponse<T> {
-    return { content, page: 0, size: content.length, totalElements: content.length, totalPages: 1, first: true, last: true };
+    return {
+      content,
+      page: 0,
+      size: content.length,
+      totalElements: content.length,
+      totalPages: 1,
+      first: true,
+      last: true,
+    };
   }
 }

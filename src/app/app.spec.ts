@@ -23,7 +23,11 @@ describe('App', () => {
   });
 
   it('should not attach guards to redirect routes', () => {
-    const redirectRoutes = routes.flatMap(route => [route, ...(route.children ?? [])]).filter(route => route.redirectTo);
-    expect(redirectRoutes.every(route => !route.canActivate && !route.canActivateChild)).toBe(true);
+    const redirectRoutes = routes
+      .flatMap((route) => [route, ...(route.children ?? [])])
+      .filter((route) => route.redirectTo);
+    expect(redirectRoutes.every((route) => !route.canActivate && !route.canActivateChild)).toBe(
+      true,
+    );
   });
 });

@@ -3,7 +3,14 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CreateUserPayload, PageResponse, Role, RoleResponse, UpdateUserPayload, UserSummary } from '../../../core/models/api.models';
+import {
+  CreateUserPayload,
+  PageResponse,
+  Role,
+  RoleResponse,
+  UpdateUserPayload,
+  UserSummary,
+} from '../../../core/models/api.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
@@ -21,7 +28,15 @@ export class AdminUsersComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly searchTerms = new Subject<string>();
 
-  readonly page = signal<PageResponse<UserSummary>>({ content: [], page: 0, size: 10, totalElements: 0, totalPages: 0, first: true, last: true });
+  readonly page = signal<PageResponse<UserSummary>>({
+    content: [],
+    page: 0,
+    size: 10,
+    totalElements: 0,
+    totalPages: 0,
+    first: true,
+    last: true,
+  });
   readonly roles = signal<RoleResponse[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -47,24 +62,37 @@ export class AdminUsersComponent implements OnInit {
   });
 
   constructor() {
-    this.searchTerms.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed()).subscribe(query => {
-      this.query.set(query);
-      this.load(0);
-    });
+    this.searchTerms
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((query) => {
+        this.query.set(query);
+        this.load(0);
+      });
   }
 
   ngOnInit(): void {
     this.load();
-    this.users.listRoles().subscribe({ next: roles => this.roles.set(roles), error: () => this.roles.set([]) });
+    this.users
+      .listRoles()
+      .subscribe({ next: (roles) => this.roles.set(roles), error: () => this.roles.set([]) });
   }
 
-  search(event: Event): void { this.searchTerms.next((event.target as HTMLInputElement).value); }
+  search(event: Event): void {
+    this.searchTerms.next((event.target as HTMLInputElement).value);
+  }
 
   load(page = this.page().page): void {
-    this.loading.set(true); this.error.set('');
+    this.loading.set(true);
+    this.error.set('');
     this.users.list(this.query(), page, 10).subscribe({
-      next: result => { this.page.set(result); this.loading.set(false); },
-      error: error => { this.loading.set(false); this.error.set(this.message(error, 'Could not load users.')); },
+      next: (result) => {
+        this.page.set(result);
+        this.loading.set(false);
+      },
+      error: (error) => {
+        this.loading.set(false);
+        this.error.set(this.message(error, 'Could not load users.'));
+      },
     });
   }
 
@@ -72,7 +100,16 @@ export class AdminUsersComponent implements OnInit {
     this.error.set('');
     this.editingUser.set(null);
     this.selectedRole.set('STUDENT');
-    this.form.reset({ firstName: '', lastName: '', email: '', password: '', studentNumber: '', studyYear: 1, employeeNumber: '', enabled: true });
+    this.form.reset({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      studentNumber: '',
+      studyYear: 1,
+      employeeNumber: '',
+      enabled: true,
+    });
     this.form.controls.password.setValidators([Validators.required, Validators.minLength(8)]);
     this.form.controls.password.updateValueAndValidity();
     this.modalOpen.set(true);
@@ -82,13 +119,24 @@ export class AdminUsersComponent implements OnInit {
     this.error.set('');
     this.editingUser.set(user);
     this.selectedRole.set(this.auth.roleOf(user));
-    this.form.reset({ firstName: user.firstName, lastName: user.lastName, email: user.email, password: '', studentNumber: user.studentNumber ?? '', studyYear: user.studyYear ?? 1, employeeNumber: user.employeeNumber ?? '', enabled: user.enabled });
+    this.form.reset({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: '',
+      studentNumber: user.studentNumber ?? '',
+      studyYear: user.studyYear ?? 1,
+      employeeNumber: user.employeeNumber ?? '',
+      enabled: user.enabled,
+    });
     this.form.controls.password.setValidators([Validators.minLength(8)]);
     this.form.controls.password.updateValueAndValidity();
     this.modalOpen.set(true);
   }
 
-  closeModal(): void { if (!this.saving()) this.modalOpen.set(false); }
+  closeModal(): void {
+    if (!this.saving()) this.modalOpen.set(false);
+  }
 
   openDelete(user: UserSummary): void {
     this.error.set('');
@@ -102,47 +150,120 @@ export class AdminUsersComponent implements OnInit {
     this.deleteTarget.set(null);
   }
 
-  selectRole(role: Role): void { this.selectedRole.set(role); if (role !== 'STUDENT') this.form.controls.studyYear.setValue(1); }
+  selectRole(role: Role): void {
+    this.selectedRole.set(role);
+    if (role !== 'STUDENT') this.form.controls.studyYear.setValue(1);
+  }
 
-  hasRole(role: Role): boolean { return this.selectedRole() === role; }
+  hasRole(role: Role): boolean {
+    return this.selectedRole() === role;
+  }
 
   submit(): void {
-    if (this.form.invalid || !this.selectedRole()) { this.form.markAllAsTouched(); this.error.set(!this.selectedRole() ? 'Select a role.' : 'Check the highlighted form fields.'); return; }
+    if (this.form.invalid || !this.selectedRole()) {
+      this.form.markAllAsTouched();
+      this.error.set(
+        !this.selectedRole() ? 'Select a role.' : 'Check the highlighted form fields.',
+      );
+      return;
+    }
     const value = this.form.getRawValue();
-    if (this.hasRole('STUDENT') && !value.studentNumber.trim()) { this.error.set('Roll number is required for the Student role.'); return; }
-    if (this.hasRole('TEACHER') && !value.employeeNumber.trim()) { this.error.set('Employee number is required for the Teacher role.'); return; }
-    this.saving.set(true); this.error.set('');
-    const common = { email: value.email.trim(), firstName: value.firstName.trim(), lastName: value.lastName.trim(), roles: [this.selectedRole()!], studentNumber: this.hasRole('STUDENT') ? value.studentNumber.trim() : null, studyYear: this.hasRole('STUDENT') ? Number(value.studyYear) : null, employeeNumber: this.hasRole('TEACHER') ? value.employeeNumber.trim() : null };
+    if (this.hasRole('STUDENT') && !value.studentNumber.trim()) {
+      this.error.set('Roll number is required for the Student role.');
+      return;
+    }
+    if (this.hasRole('TEACHER') && !value.employeeNumber.trim()) {
+      this.error.set('Employee number is required for the Teacher role.');
+      return;
+    }
+    this.saving.set(true);
+    this.error.set('');
+    const common = {
+      email: value.email.trim(),
+      firstName: value.firstName.trim(),
+      lastName: value.lastName.trim(),
+      roles: [this.selectedRole()!],
+      studentNumber: this.hasRole('STUDENT') ? value.studentNumber.trim() : null,
+      studyYear: this.hasRole('STUDENT') ? Number(value.studyYear) : null,
+      employeeNumber: this.hasRole('TEACHER') ? value.employeeNumber.trim() : null,
+    };
     const request = this.isEdit()
-      ? this.users.update(this.editingUser()!.id, { ...common, password: value.password || null, enabled: value.enabled } as UpdateUserPayload)
+      ? this.users.update(this.editingUser()!.id, {
+          ...common,
+          password: value.password || null,
+          enabled: value.enabled,
+        } as UpdateUserPayload)
       : this.users.create({ ...common, password: value.password } as CreateUserPayload);
     request.subscribe({
-      next: () => { this.saving.set(false); this.modalOpen.set(false); this.showToast(this.isEdit() ? 'User updated successfully.' : 'User created successfully.'); this.load(this.isEdit() ? this.page().page : 0); },
-      error: error => { this.saving.set(false); this.error.set(this.message(error, `Could not ${this.isEdit() ? 'update' : 'create'} the user.`)); },
+      next: () => {
+        this.saving.set(false);
+        this.modalOpen.set(false);
+        this.showToast(this.isEdit() ? 'User updated successfully.' : 'User created successfully.');
+        this.load(this.isEdit() ? this.page().page : 0);
+      },
+      error: (error) => {
+        this.saving.set(false);
+        this.error.set(
+          this.message(error, `Could not ${this.isEdit() ? 'update' : 'create'} the user.`),
+        );
+      },
     });
   }
 
   confirmDelete(): void {
     const target = this.deleteTarget();
     if (!target) return;
-    this.saving.set(true); this.error.set(''); this.deleteError.set('');
+    this.saving.set(true);
+    this.error.set('');
+    this.deleteError.set('');
     this.users.delete(target.id).subscribe({
-      next: () => { this.saving.set(false); this.deleteError.set(''); this.deleteTarget.set(null); this.showToast('User deleted successfully.'); this.load(Math.max(0, this.page().content.length === 1 ? this.page().page - 1 : this.page().page)); },
-      error: error => { this.saving.set(false); this.deleteError.set(this.message(error, 'Could not delete the user.')); },
+      next: () => {
+        this.saving.set(false);
+        this.deleteError.set('');
+        this.deleteTarget.set(null);
+        this.showToast('User deleted successfully.');
+        this.load(
+          Math.max(0, this.page().content.length === 1 ? this.page().page - 1 : this.page().page),
+        );
+      },
+      error: (error) => {
+        this.saving.set(false);
+        this.deleteError.set(this.message(error, 'Could not delete the user.'));
+      },
     });
   }
 
-  initials(user: UserSummary): string { return `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase(); }
-  identity(user: UserSummary): string { return user.studentNumber || user.employeeNumber || '—'; }
-  enabledCount(): number { return this.page().content.filter(user => user.enabled).length; }
-  userRole(user: UserSummary): Role | null { return this.auth.roleOf(user); }
-  roleCount(role: Role): number { return this.page().content.filter(user => this.userRole(user) === role).length; }
+  initials(user: UserSummary): string {
+    return `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase();
+  }
+  identity(user: UserSummary): string {
+    return user.studentNumber || user.employeeNumber || '—';
+  }
+  enabledCount(): number {
+    return this.page().content.filter((user) => user.enabled).length;
+  }
+  userRole(user: UserSummary): Role | null {
+    return this.auth.roleOf(user);
+  }
+  roleCount(role: Role): number {
+    return this.page().content.filter((user) => this.userRole(user) === role).length;
+  }
 
-  private showToast(message: string): void { this.toast.set(message); window.setTimeout(() => this.toast.set(''), 2800); }
+  private showToast(message: string): void {
+    this.toast.set(message);
+    window.setTimeout(() => this.toast.set(''), 2800);
+  }
   private message(error: any, fallback: string): string {
-    if (error.status === 0) return 'Cannot reach the Smart Attendance API. Please check your connection.';
-    let body=error.error;
-    if(typeof body==='string'){try{body=JSON.parse(body)}catch{return body||fallback}}
-    return body?.message||body?.detail||error.message||fallback;
+    if (error.status === 0)
+      return 'Cannot reach the Smart Attendance API. Please check your connection.';
+    let body = error.error;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        return body || fallback;
+      }
+    }
+    return body?.message || body?.detail || error.message || fallback;
   }
 }
