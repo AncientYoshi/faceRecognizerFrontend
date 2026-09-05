@@ -11,6 +11,7 @@ import {
   shareReplay,
   switchMap,
   tap,
+  throwError,
 } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -53,12 +54,26 @@ export class AuthService {
   }
 
   login(email: string, password: string, rememberMe = false): Observable<CurrentUser> {
+    let tokensStored = false;
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password })
       .pipe(
-        tap((tokens) => this.storeTokens(tokens, rememberMe)),
-        switchMap(() => this.http.get<CurrentUser>(`${environment.apiUrl}/me`)),
-        tap((user) => this.storeUser(user)),
+        tap((tokens) => {
+          this.storeTokens(tokens, rememberMe);
+          tokensStored = true;
+        }),
+        switchMap((tokens) => {
+          const provisionalUser = this.userFromAccessToken(tokens.accessToken, email);
+          if (!provisionalUser) return this.fetchCurrentUser();
+
+          this.storeUser(provisionalUser);
+          this.refreshCurrentUserInBackground();
+          return of(provisionalUser);
+        }),
+        catchError((error) => {
+          if (tokensStored) this.clearAuthentication();
+          return throwError(() => error);
+        }),
       );
   }
 
@@ -115,10 +130,14 @@ export class AuthService {
   }
 
   expireSession(): void {
+    this.clearAuthentication();
+    this.router.navigateByUrl('/login');
+  }
+
+  private clearAuthentication(): void {
     this.clearAuthStorage(localStorage);
     this.clearAuthStorage(sessionStorage);
     this._user.set(null);
-    this.router.navigateByUrl('/login');
   }
 
   roleOf(user: Pick<CurrentUser, 'roles'> | null | undefined): Role | null {
@@ -150,6 +169,66 @@ export class AuthService {
   private storeUser(user: CurrentUser): void {
     this.authStorage.setItem(USER_KEY, JSON.stringify(user));
     this._user.set(user);
+  }
+
+  private fetchCurrentUser(): Observable<CurrentUser> {
+    return this.http
+      .get<CurrentUser>(`${environment.apiUrl}/me`)
+      .pipe(tap((user) => this.storeUser(user)));
+  }
+
+  private refreshCurrentUserInBackground(): void {
+    const sessionToken = this.accessToken;
+    this.http.get<CurrentUser>(`${environment.apiUrl}/me`).subscribe({
+      next: (user) => {
+        if (this.accessToken === sessionToken) this.storeUser(user);
+      },
+      error: () => {
+        // The access token already establishes the session. API authorization
+        // failures are handled centrally by the HTTP error interceptor.
+      },
+    });
+  }
+
+  private userFromAccessToken(accessToken: string, fallbackEmail: string): CurrentUser | null {
+    try {
+      const encodedPayload = accessToken.split('.')[1];
+      if (!encodedPayload) return null;
+
+      const normalized = encodedPayload.replaceAll('-', '+').replaceAll('_', '/');
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      const payload = JSON.parse(atob(padded)) as {
+        sub?: string;
+        email?: string;
+        roles?: unknown;
+        iat?: number;
+      };
+      const roles = Array.isArray(payload.roles)
+        ? payload.roles.filter(
+            (role): role is Role => role === 'ADMIN' || role === 'TEACHER' || role === 'STUDENT',
+          )
+        : [];
+      if (!payload.sub || !roles.length) return null;
+
+      const email = payload.email || fallbackEmail;
+      const nameParts = email
+        .split('@')[0]
+        .split(/[._-]+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
+
+      return {
+        id: payload.sub,
+        email,
+        firstName: nameParts[0] || 'User',
+        lastName: nameParts.slice(1).join(' '),
+        enabled: true,
+        roles,
+        createdAt: new Date((payload.iat || Date.now() / 1000) * 1000).toISOString(),
+      };
+    } catch {
+      return null;
+    }
   }
 
   private readUser(): CurrentUser | null {
