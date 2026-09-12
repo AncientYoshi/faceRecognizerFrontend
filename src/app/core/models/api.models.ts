@@ -132,6 +132,7 @@ export interface PageResponse<T> {
 }
 
 export interface AttendanceSession {
+  room?: string | null;
   id: string;
   courseId: string;
   courseCode: string;
@@ -193,6 +194,7 @@ export interface AttendanceVerification {
 }
 
 export interface SessionPayload {
+  room?: string | null;
   courseId: string;
   sessionDate: string;
   startTime: string;

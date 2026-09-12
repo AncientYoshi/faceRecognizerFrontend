@@ -10,6 +10,95 @@
   @if (error()) {
     <div class="error"><sam-icon name="info" />{{ error() }}</div>
   }
+  <section class="cancellation-card" aria-labelledby="cancel-heading">
+    <h2 id="cancel-heading">Cancel course attendance</h2>
+    <p>
+      Cancel today's classes when you are unavailable, or stop future attendance when your course is
+      finished.
+    </p>
+    <form [formGroup]="cancellationForm" (ngSubmit)="reviewCancellation()">
+      <div class="cancellation-fields">
+        <label
+          >Course
+          <select formControlName="courseId" (change)="loadCancellations()">
+            <option value="" disabled>Select a course</option>
+            @for (course of courses(); track course.id) {
+              <option [value]="course.id">{{ course.code }} — {{ course.name }}</option>
+            }
+          </select>
+        </label>
+        <label
+          >Cancellation applies to
+          <select formControlName="scope">
+            <option value="TODAY">Today only</option>
+            <option value="FUTURE">All dates from a chosen day</option>
+          </select>
+        </label>
+        @if (cancellationForm.controls.scope.value === 'FUTURE') {
+          <label
+            >Cancel from (inclusive)
+            <input
+              type="date"
+              formControlName="fromDate"
+              [min]="cancellationContext()?.today || ''"
+            />
+          </label>
+        }
+      </div>
+      @if (cancellationContext(); as context) {
+        <p class="help">
+          Today: {{ context.today }} · {{ context.timeZone }}.
+          @if (cancellationForm.controls.scope.value === 'TODAY') {
+            All scheduled and active classes for this course today will be cancelled. Later days
+            will continue normally.
+          } @else {
+            All scheduled and active classes on or after the chosen date will be cancelled, and new
+            sessions will not be generated.
+          }
+          Completed classes are kept. Cancelled sessions do not count as absences.
+        </p>
+      }
+      <label
+        >Reason
+        <textarea
+          formControlName="reason"
+          rows="2"
+          maxlength="500"
+          placeholder="For example: sick leave, or all course attendance completed"
+        ></textarea>
+      </label>
+      <button
+        class="cancel-course"
+        type="submit"
+        [disabled]="cancellationLoading() || !cancellationContext() || cancelling()"
+      >
+        Review cancellation
+      </button>
+    </form>
+    @if (cancellationLoading()) {
+      <p role="status">Loading course cancellations…</p>
+    }
+    @if (cancellationError() && !confirmCancellation()) {
+      <p class="error" role="alert">{{ cancellationError() }}</p>
+      @if (!cancellationContext()) {
+        <button type="button" (click)="loadCancellations()">Retry</button>
+      }
+    }
+    @if (cancellationSuccess()) {
+      <p class="success" role="status">{{ cancellationSuccess() }}</p>
+    }
+    @if (cancellationContext()?.cancellations?.length) {
+      <h3>Saved cancellations for this course</h3>
+      <ul class="cancellation-history">
+        @for (item of cancellationContext()!.cancellations; track item.id) {
+          <li>
+            <strong>{{ item.fromDate }}{{ item.toDate ? ' only' : ' onwards' }}</strong
+            ><span>{{ item.reason }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
   <section class="table-card">
     <div class="scroll">
       <table>
@@ -61,6 +150,52 @@
     }
   </section>
 </div>
+@if (confirmCancellation()) {
+  <div class="backdrop">
+    <section
+      class="modal cancellation-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-cancellation-title"
+    >
+      <header><h2 id="confirm-cancellation-title">Confirm cancellation</h2></header>
+      <div class="dialog-body">
+        <strong>{{ cancellationCourseName() }}</strong>
+        <p>
+          @if (cancellationForm.controls.scope.value === 'TODAY') {
+            Cancel all scheduled and active attendance for today ({{
+              cancellationContext()?.today
+            }}).
+          } @else {
+            Stop all attendance from {{ cancellationForm.controls.fromDate.value }} onwards,
+            including that day.
+          }
+        </p>
+        <p>
+          Completed classes stay in the records. Cancelled sessions are excluded from attendance
+          percentages. Already sent emails cannot be recalled.
+        </p>
+        <p><strong>Reason:</strong> {{ cancellationForm.controls.reason.value }}</p>
+        @if (cancellationError()) {
+          <p class="error" role="alert">{{ cancellationError() }}</p>
+        }
+        <footer>
+          <button type="button" [disabled]="cancelling()" (click)="confirmCancellation.set(false)">
+            Go back
+          </button>
+          <button
+            class="cancel-course"
+            type="button"
+            [disabled]="cancelling()"
+            (click)="cancelSchedule()"
+          >
+            {{ cancelling() ? 'Cancelling…' : 'Confirm cancellation' }}
+          </button>
+        </footer>
+      </div>
+    </section>
+  </div>
+}
 @if (modal()) {
   <div class="backdrop">
     <section class="modal">

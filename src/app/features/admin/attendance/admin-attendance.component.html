@@ -126,6 +126,9 @@
           </div>
           <h2>{{ s.courseName }}</h2>
           <p>{{ s.courseCode }} · {{ s.teacherName }}</p>
+          @if (s.room) {
+            <p>Room: {{ s.room }}</p>
+          }
           <div class="time">
             <sam-icon name="clock" />{{ s.startTime | date: 'h:mm a' }} –
             {{ s.endTime | date: 'h:mm a' }}
@@ -139,6 +142,9 @@
             }
             @if (s.status === 'ACTIVE') {
               <button class="close" (click)="action(s, 'close')">Close session</button>
+              <button [disabled]="sessionActionPending() === s.id" (click)="action(s, 'cancel')">
+                {{ sessionActionPending() === s.id ? 'Cancelling…' : 'Cancel class' }}
+              </button>
             }
           </footer>
         </article>
@@ -413,6 +419,11 @@
             }
           </select></label
         ><label>Session date<input type="date" formControlName="sessionDate" /></label>
+        <label>
+          Room (optional)
+          <input formControlName="room" maxlength="100" placeholder="e.g. Automation Lab" />
+          <small>For a room-bound camera, enter the same room as its hardware settings.</small>
+        </label>
         <div class="row">
           <label>Start time<input type="datetime-local" formControlName="startTime" /></label
           ><label>End time<input type="datetime-local" formControlName="endTime" /></label>

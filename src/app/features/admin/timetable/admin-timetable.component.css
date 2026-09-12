@@ -2,6 +2,99 @@
   max-width: 1450px;
   margin: auto;
 }
+.cancellation-card {
+  background: #fff;
+  border: 1px solid #dfe7ef;
+  border-radius: 11px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.cancellation-card h2 {
+  margin: 0 0 8px;
+  font-size: 21px;
+}
+.cancellation-card p {
+  color: #526278;
+  line-height: 1.6;
+}
+.cancellation-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 16px;
+}
+.cancellation-card label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.cancellation-card select,
+.cancellation-card input,
+.cancellation-card textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 7px;
+  padding: 10px;
+  border: 1px solid #d7e0e9;
+  border-radius: 7px;
+  font: inherit;
+  background: #fff;
+  color: #26384f;
+}
+.cancellation-card textarea {
+  resize: vertical;
+}
+.cancellation-card .help {
+  font-size: 13px;
+}
+button.cancel-course,
+.modal footer button.cancel-course {
+  background: #b62e45;
+  color: #fff;
+  border: 0;
+  border-radius: 7px;
+  padding: 12px 18px;
+  font: inherit;
+  font-weight: 700;
+  height: auto;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.cancellation-card .success {
+  padding: 12px;
+  border-radius: 7px;
+  color: #126c4d;
+  background: #e5f8ef;
+}
+.cancellation-history {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cancellation-history li {
+  padding: 12px 0;
+  border-top: 1px solid #e8edf2;
+}
+.cancellation-history strong,
+.cancellation-history span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.cancellation-history span {
+  color: #526278;
+  margin-top: 5px;
+}
+.dialog-body {
+  padding: 22px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.cancellation-dialog footer {
+  flex-wrap: wrap;
+}
 .page > header {
   display: flex;
   align-items: end;

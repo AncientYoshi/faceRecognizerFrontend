@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   DayOfWeek,
@@ -11,11 +11,92 @@ import {
 } from '../models/api.models';
 import { AuthService } from './auth.service';
 
+export interface ScheduleCancellation {
+  id: string;
+  fromDate: string;
+  toDate: string | null;
+  reason: string;
+  createdAt: string;
+}
+
+export interface ScheduleCancellationContext {
+  today: string;
+  timeZone: string;
+  cancellations: ScheduleCancellation[];
+}
+
+export interface CancelCourseSchedulePayload {
+  scope: 'TODAY' | 'FUTURE';
+  fromDate: string | null;
+  reason: string;
+}
+
+export interface CancelCourseScheduleResult {
+  cancellation: ScheduleCancellation;
+  cancelledSessions: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TimetableService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
   private preview = signal<TimetableEntry[]>([]);
+  private previewCancellations = new Map<string, ScheduleCancellation[]>();
+
+  cancellations(courseId: string): Observable<ScheduleCancellationContext> {
+    if (this.auth.isPreview()) {
+      return of({
+        today: this.previewToday(),
+        timeZone: 'Asia/Yangon',
+        cancellations: this.previewCancellations.get(courseId) ?? [],
+      });
+    }
+    return this.http.get<ScheduleCancellationContext>(
+      `${environment.apiUrl}/courses/${courseId}/schedule-cancellations`,
+    );
+  }
+
+  cancelCourse(
+    courseId: string,
+    body: CancelCourseSchedulePayload,
+  ): Observable<CancelCourseScheduleResult> {
+    if (this.auth.isPreview()) {
+      const today = this.previewToday();
+      const fromDate = body.scope === 'TODAY' ? today : body.fromDate;
+      if (!fromDate || fromDate < today || !body.reason.trim()) {
+        return throwError(() => ({
+          error: { message: 'Choose today or a future date and enter a reason.' },
+        }));
+      }
+      const toDate = body.scope === 'TODAY' ? today : null;
+      const previous = this.previewCancellations.get(courseId) ?? [];
+      const cancellation = previous.find((c) => c.fromDate === fromDate && c.toDate === toDate) ?? {
+        id: crypto.randomUUID(),
+        fromDate,
+        toDate,
+        reason: body.reason.trim(),
+        createdAt: new Date().toISOString(),
+      };
+      this.previewCancellations.set(courseId, [
+        cancellation,
+        ...previous.filter((c) => c.id !== cancellation.id),
+      ]);
+      return of({ cancellation, cancelledSessions: 0 });
+    }
+    return this.http.post<CancelCourseScheduleResult>(
+      `${environment.apiUrl}/courses/${courseId}/schedule-cancellations`,
+      body,
+    );
+  }
+
+  private previewToday(): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Yangon',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+  }
   list(
     filters: {
       courseId?: string;

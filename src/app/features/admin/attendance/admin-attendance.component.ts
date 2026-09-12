@@ -92,6 +92,7 @@ export class AdminAttendanceComponent implements OnInit {
     query: [''],
   });
   sessionForm = this.fb.nonNullable.group({
+    room: ['', Validators.maxLength(100)],
     courseId: ['', Validators.required],
     sessionDate: ['', Validators.required],
     startTime: ['', Validators.required],
@@ -212,6 +213,7 @@ export class AdminAttendanceComponent implements OnInit {
         startTime: this.local(session.startTime),
         endTime: this.local(session.endTime),
         rollCallCount: session.rollCallCount,
+        room: session.room || '',
       });
     else {
       const now = new Date(),
@@ -222,6 +224,7 @@ export class AdminAttendanceComponent implements OnInit {
         startTime: this.local(now.toISOString()),
         endTime: this.local(later.toISOString()),
         rollCallCount: 1,
+        room: '',
       });
     }
     this.modal.set(true);
@@ -235,6 +238,7 @@ export class AdminAttendanceComponent implements OnInit {
       startTime: new Date(v.startTime).toISOString(),
       endTime: new Date(v.endTime).toISOString(),
       rollCallCount: v.rollCallCount,
+      room: v.room.trim() || null,
     };
     this.saving.set(true);
     const req = this.editing()
@@ -254,8 +258,27 @@ export class AdminAttendanceComponent implements OnInit {
     });
   }
   action(s: AttendanceSession, a: 'start' | 'close' | 'cancel') {
-    this.api.action(s.id, a).subscribe({ next: () => this.load(), error: (e) => this.fail(e) });
+    if (this.sessionActionPending()) return;
+    if (
+      a === 'cancel' &&
+      !confirm(
+        `Cancel ${s.courseName} on ${s.sessionDate}? This session will be excluded from attendance percentages. Later weekly classes will continue.`,
+      )
+    )
+      return;
+    this.sessionActionPending.set(s.id);
+    this.api.action(s.id, a).subscribe({
+      next: () => {
+        this.sessionActionPending.set(null);
+        this.load();
+      },
+      error: (e) => {
+        this.sessionActionPending.set(null);
+        this.fail(e);
+      },
+    });
   }
+  readonly sessionActionPending = signal<string | null>(null);
   remove(s: AttendanceSession) {
     if (confirm(`Delete ${s.courseName} session?`))
       this.api
